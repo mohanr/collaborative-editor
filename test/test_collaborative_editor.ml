@@ -15,5 +15,8 @@ let create_config_node () : (module Configurer)=
 
 
 let%expect_test _=
+
+    let () = print_string "Collaborative Editor" in
+    flush stdout;
     Printf.printf "%s" "Terminal Driver";
-    [%expect {| false |}]
+    [%expect {| Collaborative EditorTerminal Driver |}]
