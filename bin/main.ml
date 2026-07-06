@@ -1,10 +1,36 @@
 open Eio.Std
 open Event
 
-let run env =
-  ()
+let unpaused = ref (Promise.create_resolved ())
 
-let render ()=
+let await_timeout timeout_mutex =
+    Eio.Condition.await_no_mutex timeout_mutex
+
+let run env =
+
+   Eio.Switch.run @@ fun _ ->
+   let cond = Eio.Condition.create () in
+   let clock = Eio.Stdenv.clock env in
+   Fiber.both  (fun () ->
+     while true do
+        Promise.await !unpaused;
+        Eio.Condition.broadcast cond;
+        Eio.Time.sleep clock 3.5;
+      done
+  )
+  (fun () ->
+    let rec loop () =
+      await_timeout cond;
+      print_string "Collaborative Editor";
+      flush stdout;
+      Fiber.yield ();
+      loop ()
+    in
+    loop ()
+  )
+
+
+let change_mode ()=
      let enable_raw_mode () =
        let stdin_fd = Unix.descr_of_in_channel stdin in
        let termios = Unix.tcgetattr stdin_fd in
@@ -20,9 +46,10 @@ let render ()=
 let end_loop()  =
   Printf.printf "End loop"
 
-let main() =
+let () =
   Fmt.pr "main";
   Eio_main.run @@ fun env ->
   Switch.run  @@ fun sw ->
+  let _ = change_mode () in
   Fiber.fork ~sw ( fun () -> run env  );
   ()
