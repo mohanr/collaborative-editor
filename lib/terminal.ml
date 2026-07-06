@@ -12,7 +12,6 @@ let render() = ()
 
 type terminal = {
     driver : MockDriver.t;
-    buffers :  Buffer.t;
 }
 
 end
