@@ -18,7 +18,6 @@ val get_x :  int
 val get_y :  int
 val get_width :  int
 val get_height :  int
-val get_t : unit -> t
 end
 
  module Area : Buffer_area = struct
@@ -42,7 +41,6 @@ end
             (* The height of the `Area` *)
            height = 5
        }
- let get_t () = t
  let get_x  = t.x
  let get_y  = t.y
  let get_width  = t.width
@@ -78,13 +76,14 @@ end
 end
 
 module type BufferMaker = sig
-  module Make( Config : Configurer_intf.Configurer) : sig
 
     type t = {
         area : Area.t;
 
         contents : Bytes.t;
     }
+  module Make( Config : Configurer_intf.Configurer) : sig
+
 
     val new_buffer : unit -> t
   end

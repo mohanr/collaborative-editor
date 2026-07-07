@@ -29,6 +29,9 @@ let run env =
     loop ()
   )
 
+let render frame =
+    Printf.printf("render")
+
 
 let change_mode ()=
      let enable_raw_mode () =
