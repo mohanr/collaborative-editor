@@ -1,16 +1,8 @@
 open Widget
 open Buffer
+open Types
 
 module Textholder = struct
-
-type location = {
-
-  x : int;
-
-  y: int
-
-}
-
 
 (* An existential is an abstraction of data representation *)
 
@@ -40,8 +32,10 @@ type textholder  = {
             y =  snd offset
         }
 
-let render area ( buf : (module BufferMaker)) ( widget : (module Widget)) =
-   let  module W  =(val widget : Widget) in
-   W.render area buf
+let render data  =
+  {
+    data = data;
+    scroll = {x = 0; y = 0}     (*  Test location*)
+  }
 
 end

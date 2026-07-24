@@ -1,26 +1,8 @@
 open Configurer_intf
+open Stdlib
+open Types
 
-module type Buffer_area =
-
-sig
-       type t = {
-           (* The x coordinate of the top left corner of the `Area` *)
-           x : int;
-            (* The y coordinate of the top left corner of the `Rect` *)
-           y : int;
-            (* The width of the `Area` *)
-           width : int;
-            (* The height of the `Area` *)
-           height : int
-       }
-
-val get_x :  int
-val get_y :  int
-val get_width :  int
-val get_height :  int
-end
-
- module Area : Buffer_area = struct
+ module Area : Arena = struct
        type t = {
            (* The x coordinate of the top left corner of the `Area` *)
            x : int;
@@ -50,7 +32,7 @@ end
 
 
 
-module Buffer ( Area :  Buffer_area )= struct
+module Buffer ( Area :  Arena )= struct
 
 
 module Area  = Area
@@ -58,18 +40,18 @@ module Area  = Area
 type t = {
     area : Area.t;
 
-    contents : Bytes.t;
+    contents : Buffer.t;
 }
 
 let get_area() =
-  (module Area:Buffer_area)
+  (module Area:Arena)
 
 module Make( Config : Configurer_intf.Configurer) = struct
   let new_buffer ()  =
     let config= Config.set_size () in
     let area : Area.t = { x = 0;y = 0;
                  width = config.width; height  = config.height } in
-    {area = area; contents = Bytes.create 100}
+    {area = area; contents = Buffer.create 4096}
 
 end
 
@@ -80,7 +62,7 @@ module type BufferMaker = sig
     type t = {
         area : Area.t;
 
-        contents : Bytes.t;
+        contents : Stdlib.Buffer.t;
     }
   module Make( Config : Configurer_intf.Configurer) : sig
 
