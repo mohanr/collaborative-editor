@@ -2,13 +2,23 @@ open Collaborative_editor__Configurer_intf.MakeConfigurer
 open Collaborative_editor__Configurer_intf
 
 let create_config_node () : (module Configurer)=
+
   let module Config = struct
+
    include MakeConfigurer
+   (* Default ? *)
    let config = {
     width = 5;
     height = 5
    }
-   let set_size() = config
+
+   let set_size w h =
+    {
+    width = w;
+    height =h;
+   }
+
+
   end in
   (module Config: Configurer )
 

@@ -1,10 +1,20 @@
 open Eio.Std
 open Event
+open Collaborative_editor__Buffer
+open Collaborative_editor__Configure
 
 let unpaused = ref (Promise.create_resolved ())
 
 let await_timeout timeout_mutex =
     Eio.Condition.await_no_mutex timeout_mutex
+
+module C = Make
+module A = Area
+module B = Buffer(A)
+module BF = BufferManipulator (C) (B)
+
+let create_buffer() =
+  BF.make_buffer()
 
 let run env =
 

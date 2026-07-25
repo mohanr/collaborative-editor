@@ -48,7 +48,7 @@ let get_area() =
 
 module Make( Config : Configurer_intf.Configurer) = struct
   let new_buffer ()  =
-    let config= Config.set_size () in
+    let config= Config.set_size 10 10 in
     let area : Area.t = { x = 0;y = 0;
                  width = config.width; height  = config.height } in
     {area = area; contents = Buffer.create 4096}
@@ -70,7 +70,7 @@ module type BufferMaker = sig
     val new_buffer : unit -> t
   end
 end
-
+(* This is supposed to manipulate the buffer *)
 module BufferManipulator
                        ( Config : Configurer_intf.Configurer)
                        ( Buffer : BufferMaker)= struct
