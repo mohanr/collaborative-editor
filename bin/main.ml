@@ -69,7 +69,6 @@ let end_loop()  =
   Printf.printf "End loop"
 
 let () =
-  Fmt.pr "main";
   Eio_main.run @@ fun env ->
   Switch.run  @@ fun sw ->
   let _ = change_mode () in
