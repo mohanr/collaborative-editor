@@ -9,7 +9,7 @@ struct
 type t = test_driver
 
 module Make( Config : Configurer_intf.Configurer)
-           ( Buffer : BufferMaker)= struct
+           ( Buffer : BUFFERMAKER)= struct
 
 
     let empty_buffer ()=

@@ -2,6 +2,19 @@ open Widget
 open Buffer
 open Types
 
+module type Holder = sig
+
+   type 'text representation= {
+
+     self : 'text ;
+
+     text_length : 'text -> int
+   }
+   type text = Text : 'text representation-> text
+
+
+    val make : text -> text        (* No embellishments like style for now *)
+end
 module Textholder = struct
 
 (* An existential is an abstraction of data representation *)

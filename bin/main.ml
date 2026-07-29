@@ -1,7 +1,12 @@
 open Eio.Std
 open Event
+open Collaborative_editor__Types
 open Collaborative_editor__Buffer
 open Collaborative_editor__Configure
+open Collaborative_editor__Widget
+open Collaborative_editor__Renderer
+open Collaborative_editor__Textholder
+open Collaborative_editor__Frame
 
 let unpaused = ref (Promise.create_resolved ())
 
@@ -13,8 +18,16 @@ module A = Area
 module B = Buffer(A)
 module BF = BufferManipulator (C) (B)
 
-let create_buffer() =
+let create_buffer()  =
   BF.make_buffer()
+
+module W = Widget
+
+let render() =
+    let _f = Renderer.get_frame() in     (* TODO *)
+    let text = Textholder.make "Text" in (* TODO *)
+    Frame.render_widget text (module W) (create_buffer())
+
 
 let run env =
 
@@ -31,17 +44,13 @@ let run env =
   (fun () ->
     let rec loop () =
       await_timeout cond;
-      print_string "Collaborative Editor";
+      render();
       flush stdout;
       Fiber.yield ();
       loop ()
     in
     loop ()
   )
-
-let render frame =
-    Printf.printf("render")
-
 
 let change_mode ()=
      let enable_raw_mode () =
