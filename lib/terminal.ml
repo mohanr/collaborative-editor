@@ -1,5 +1,6 @@
 open Term_driver
 open Buffer
+open Renderer
 
 module type TERMINAL_OPERATIONS  = sig
     val draw : unit -> unit
