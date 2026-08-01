@@ -1,4 +1,9 @@
 
+type style =
+  | VBorder of string
+  | Glyph of string
+
+
 module type Arena =
 
 sig
