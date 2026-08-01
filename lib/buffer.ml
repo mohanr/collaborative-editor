@@ -40,15 +40,4 @@ let make_buffer() =
  let module B =   Buffer.Make(Config) in
   B.new_buffer()
 
-
- (* let set_stringn *)
- (*        x *)
- (*        y *)
- (*        s *)
- (*        max_width = *)
-
- (*        let buf = make_buffer() in *)
- (*        match buf with *)
- (*        |{ area; contents } -> *)
-
 end
