@@ -1,6 +1,7 @@
 
 type style =
-  | VBorder of string
+  | VeBorder of string
+  | HoBorder of string
   | Glyph of string
 
 
@@ -42,7 +43,7 @@ end
             (* The y coordinate of the top left corner of the `Rect` *)
            y = 5;
             (* The width of the `Area` *)
-           width = 5;
+           width = 21;
             (* The height of the `Area` *)
            height = 5
        }

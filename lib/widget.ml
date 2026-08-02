@@ -9,12 +9,25 @@ module type Widget = sig
     val render : Area.t  -> ?custom_formatter:Format.formatter -> Types.t-> unit
 end
 
-let draw_border_in_buffer border width =
+let draw_hborder_in_buffer (border : style ) width =
+  let rec repeat ?(n = 0) s =
+      if n = 0 then "" else s ^ repeat s ~n:(n - 1)
+  in
   let draw b buffer =
     match b with
-    | VBorder s ->
+    | HoBorder s ->
+                    Buffer.add_string  buffer (repeat ~n:(width + 2)  s ) ;
+                    buffer
+    |  _-> buffer
+  in
+     draw border (Buffer.create (width + 2))
+
+let draw_vborder_in_buffer border width =
+  let draw b buffer =
+    match b with
+    | VeBorder s ->  let l = width in
                     Buffer.add_string buffer s;
-                    Buffer.add_string  buffer (String.make ((Buffer.length buffer) - 2) ' ' );
+                    Buffer.add_string  buffer (String.make (l - 2) ' ' );
                     Buffer.add_string buffer s;
                     buffer
     |  _-> buffer
@@ -34,15 +47,20 @@ module Widget = struct
 
    let tui_stag_functions (area : Types.Area.t) = {
      Format.mark_open_stag = (fun stag ->
+       let plain_style = get_plain_style() in (*  Default *)
        match stag with
        | Format.String_tag s ->
                 (match s with
                 | s when String.equal s "Highlight"
                         ->   "\x1b[48;5;162m\x1b[38;5;255m";
+                | s when String.equal s "HBorder"
+                      ->
+                         let buf = draw_hborder_in_buffer (HoBorder  plain_style.horizontal_top)
+                         area.width
+                          in   (Buffer.contents buf);
                 | s when String.equal s "VBorder"
                       ->
-                         let plain_style = get_plain_style() in
-                         let buf = draw_border_in_buffer (VBorder  plain_style.vertical_left)
+                         let buf = draw_vborder_in_buffer (VeBorder  plain_style.vertical_left)
                          area.width
                           in   (Buffer.contents buf);
                 | _ -> String.empty)
@@ -59,16 +77,19 @@ module Widget = struct
      Format.pp_set_tags Format.std_formatter true;
      Format.pp_set_formatter_stag_functions Format.std_formatter (tui_stag_functions area);
 
+     Format.printf "@.@{<HBorder>@}";
+     Format.printf "@.@{<VBorder>@}";
+     Format.printf "@.@{<VBorder>@}";
      Format.printf "@.@{<VBorder>@}";
 
-     pp_linebreak Format.std_formatter ();
-     Format.printf "@.";
-     pp_linebreak Format.std_formatter ();
-     Format.printf "@{<Highlight>Collaborative editor.@}@.";
+     Format.printf "@[<v 2>@,@{<Highlight>Collaborative editor.@}@]@.";
 
      Format.printf "@.@{<VBorder>@}";
+     Format.printf "@.@{<VBorder>@}";
+     Format.printf "@.@{<VBorder>@}";
+     Format.printf "@.@{<HBorder>@}";
 
-     pp_linebreak Format.std_formatter ()
+     flush stdout
 
 
 
