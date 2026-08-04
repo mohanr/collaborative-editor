@@ -82,3 +82,7 @@ type location = {
   y: int
 
 }
+type ansi_escape_codes = {
+  text_cursor_enable: string;
+  reset_text_cursor_enable: string
+}

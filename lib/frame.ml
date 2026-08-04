@@ -4,7 +4,6 @@ open Types
 
 
 module Frame = struct
-
   (*  Viewport etc.*)
 type frame = {
     cursor_position: location Option.t;
