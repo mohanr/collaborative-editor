@@ -10,14 +10,24 @@ module type Widget = sig
     val render : Area.t  -> ?custom_formatter:Format.formatter -> Types.t -> unit
 end
 
-let draw_hborder_in_buffer (border : style ) width =
+let plain_style = Window.get_plain_style ()
+
+let draw_hborder_in_buffer (border : style ) width bottom_or_top =
   let rec repeat ?(n = 0) s =
       if n = 0 then "" else s ^ repeat s ~n:(n - 1)
   in
   let draw b buffer =
     match b with
     | HoBorder s ->
-                    Buffer.add_string  buffer (repeat ~n:(width + 2)  s ) ;
+                   if bottom_or_top then
+                    Buffer.add_string  buffer  plain_style.top_left
+                   else
+                    Buffer.add_string  buffer  plain_style.bottom_left;
+                    Buffer.add_string  buffer (repeat ~n:(width - 2)  s ) ;
+                   if bottom_or_top then
+                    Buffer.add_string  buffer  plain_style.top_right
+                   else
+                    Buffer.add_string  buffer  plain_style.bottom_right;
                     buffer
     |  _-> buffer
   in
@@ -57,7 +67,7 @@ module Widget = struct
                 | s when String.equal s "HBorder"
                       ->
                          let buf = draw_hborder_in_buffer (HoBorder  plain_style.horizontal_top)
-                         area.width
+                         area.width true
                           in   (Buffer.contents buf);
                 | s when String.equal s "VBorder"
                       ->
@@ -74,25 +84,33 @@ module Widget = struct
 
    let pp_linebreak ppf () = Format.pp_print_break ppf Format.pp_infinity 0
 
+let add buf s =
+  Buffer.add_string buf s
+
 (* https://pkg.go.dev/github.com/charmbracelet/x/ansi *)
 let render_styled_text (area : Types.Area.t) =
-  let plain_style = Window.get_plain_style () in
   let ansi_escape_codes = Terminal.ansi_escape_codes () in
   let buf = Buffer.create 256 in
-  let new_location = ref { x =  1; y = 1} in
-  Buffer.add_string buf (Terminal.Cursor.set_cursor_position new_location);
-  Buffer.add_string buf  "\x1b[?2026h";
-  Buffer.add_string buf  (ansi_escape_codes.reset_text_cursor_enable);
-  Buffer.add_string buf (Buffer.contents (draw_hborder_in_buffer (HoBorder plain_style.horizontal_top) area.width));
-  for i = 1 to area.height  do
-    let new_location = ref { x =  1; y = 1} in
-    Buffer.add_string buf (Terminal.Cursor.set_cursor_position new_location);
-    Buffer.add_string buf (Buffer.contents (draw_vborder_in_buffer (VeBorder plain_style.vertical_left) area.width));
-  done;
-    let new_location = ref { x = area.height; y = 1} in
-    Buffer.add_string buf (Terminal.Cursor.set_cursor_position new_location);
-  Buffer.add_string buf (Buffer.contents (draw_hborder_in_buffer (HoBorder plain_style.horizontal_bottom) area.width));
-  Buffer.add_string buf "\x1b[?2026l";
+  let new_location = ref { x =  0; y = 0} in
+  add buf (Terminal.Cursor.set_cursor_position new_location);
+  add buf "\x1b[?2026h";
+  add buf ansi_escape_codes.reset_text_cursor_enable;
+  add buf (Buffer.contents (draw_hborder_in_buffer (HoBorder plain_style.horizontal_top) area.width true));
+
+    let rec loop i h =
+      if i < h then
+      let new_location = ref { x = i ; y = 1} in
+      Buffer.add_string buf (Terminal.Cursor.set_cursor_position new_location);
+      Buffer.add_string buf (Buffer.contents (draw_vborder_in_buffer (VeBorder plain_style.vertical_left) area.width));
+      loop (i + 1) h
+      else ()
+    in
+    loop 2 area.height;
+
+  let new_location = ref { x = area.height; y = 0} in
+  add buf (Terminal.Cursor.set_cursor_position new_location);
+  add buf (Buffer.contents (draw_hborder_in_buffer (HoBorder plain_style.horizontal_bottom) area.width false));
+  add buf "\x1b[?2026l";
   let out = Buffer.contents buf in
   let fd = Unix.descr_of_out_channel stdout in
   ignore (Unix.write_substring fd out 0 (String.length out))
