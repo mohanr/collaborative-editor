@@ -2,11 +2,12 @@ open Types
 open Buffer
 open Format
 open Stdlib
-open Window.Window
+open Window
+open Terminal
 
 (* https://hal.science/hal-01503081/file/format-unraveled.pdf *)
 module type Widget = sig
-    val render : Area.t  -> ?custom_formatter:Format.formatter -> Types.t-> unit
+    val render : Area.t  -> ?custom_formatter:Format.formatter -> Types.t -> unit
 end
 
 let draw_hborder_in_buffer (border : style ) width =
@@ -47,7 +48,7 @@ module Widget = struct
 
    let tui_stag_functions (area : Types.Area.t) = {
      Format.mark_open_stag = (fun stag ->
-       let plain_style = get_plain_style() in (*  Default *)
+       let plain_style = Window.get_plain_style() in (*  Default *)
        match stag with
        | Format.String_tag s ->
                 (match s with
@@ -73,23 +74,46 @@ module Widget = struct
 
    let pp_linebreak ppf () = Format.pp_print_break ppf Format.pp_infinity 0
 
-   let render_styled_text area =
-     Format.pp_set_tags Format.std_formatter true;
-     Format.pp_set_formatter_stag_functions Format.std_formatter (tui_stag_functions area);
+(* https://pkg.go.dev/github.com/charmbracelet/x/ansi *)
+let render_styled_text (area : Types.Area.t) =
+  let plain_style = Window.get_plain_style () in
+  let ansi_escape_codes = Terminal.ansi_escape_codes () in
+  let buf = Buffer.create 256 in
+  let new_location = ref { x =  1; y = 1} in
+  Buffer.add_string buf (Terminal.Cursor.set_cursor_position new_location);
+  Buffer.add_string buf  "\x1b[?2026h";
+  Buffer.add_string buf  (ansi_escape_codes.reset_text_cursor_enable);
+  Buffer.add_string buf (Buffer.contents (draw_hborder_in_buffer (HoBorder plain_style.horizontal_top) area.width));
+  for i = 1 to area.height  do
+    let new_location = ref { x =  1; y = 1} in
+    Buffer.add_string buf (Terminal.Cursor.set_cursor_position new_location);
+    Buffer.add_string buf (Buffer.contents (draw_vborder_in_buffer (VeBorder plain_style.vertical_left) area.width));
+  done;
+    let new_location = ref { x = area.height; y = 1} in
+    Buffer.add_string buf (Terminal.Cursor.set_cursor_position new_location);
+  Buffer.add_string buf (Buffer.contents (draw_hborder_in_buffer (HoBorder plain_style.horizontal_bottom) area.width));
+  Buffer.add_string buf "\x1b[?2026l";
+  let out = Buffer.contents buf in
+  let fd = Unix.descr_of_out_channel stdout in
+  ignore (Unix.write_substring fd out 0 (String.length out))
 
-     Format.printf "@.@{<HBorder>@}";
-     Format.printf "@.@{<VBorder>@}";
-     Format.printf "@.@{<VBorder>@}";
-     Format.printf "@.@{<VBorder>@}";
+   (* let render_styled_text area = *)
+   (*   Format.pp_set_tags Format.std_formatter true; *)
+   (*   Format.pp_set_formatter_stag_functions Format.std_formatter (tui_stag_functions area); *)
 
-     Format.printf "@[<v 2>@,@{<Highlight>Collaborative editor.@}@]@.";
+   (*   Format.printf "@.@{<HBorder>@}"; *)
+   (*   Format.printf "@.@{<VBorder>@}"; *)
+   (*   Format.printf "@.@{<VBorder>@}"; *)
+   (*   Format.printf "@.@{<VBorder>@}"; *)
 
-     Format.printf "@.@{<VBorder>@}";
-     Format.printf "@.@{<VBorder>@}";
-     Format.printf "@.@{<VBorder>@}";
-     Format.printf "@.@{<HBorder>@}";
+   (*   Format.printf "@[<v 2>@,@{<Highlight>Collaborative editor.@}@]@."; *)
 
-     flush stdout
+   (*   Format.printf "@.@{<VBorder>@}"; *)
+   (*   Format.printf "@.@{<VBorder>@}"; *)
+   (*   Format.printf "@.@{<VBorder>@}"; *)
+   (*   Format.printf "@.@{<HBorder>@}"; *)
+
+   (*   flush stdout *)
 
 
 

@@ -7,15 +7,15 @@ module Border = Set.Make(struct
   let compare a b = compare (String.lowercase_ascii a) (String.lowercase_ascii b)
 end)
 
-let get_plain_style() = {
-    top_left =  "┌";
-    top_right =  "┘";
-    bottom_left =  "└";
-    bottom_right =  "┐";
-    vertical_left =  "│";
-    vertical_right =  "│";
-    horizontal_top =  "─";
-    horizontal_bottom =  "─"
+let get_plain_style () = {
+  top_left      = "┌";
+  top_right     = "┐";
+  bottom_left   = "└";
+  bottom_right  = "┘";
+  vertical_left  = "│";
+  vertical_right = "│";
+  horizontal_top    = "─";
+  horizontal_bottom = "─";
 }
 
 

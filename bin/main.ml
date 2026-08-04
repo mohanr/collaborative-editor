@@ -58,7 +58,8 @@ let change_mode ()=
        let termios = Unix.tcgetattr stdin_fd in
        let new_termios =
          Unix.
-           { termios with c_icanon = false; c_echo = false; c_vmin = 0; c_vtime = 1 }
+           { termios with c_icanon = false; c_echo = false;
+                          c_vmin = 0; c_vtime = 1 ; c_opost =false }
        in
        Unix.tcsetattr stdin_fd Unix.TCSAFLUSH new_termios;
        termios

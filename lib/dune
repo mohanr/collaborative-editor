@@ -4,4 +4,6 @@
 (library
  (name collaborative_editor)
  (preprocess (pps ppx_deriving.show ppx_bin_prot))
- (libraries eio_main ))
+ (libraries eio_main )
+(modules terminal types term_driver configurer_intf buffer configure window frame textholder renderer widget )
+)
