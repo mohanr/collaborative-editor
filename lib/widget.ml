@@ -38,7 +38,9 @@ let draw_vborder_in_buffer border width =
     match b with
     | VeBorder s ->  let l = width in
                     Buffer.add_string buffer s;
-                    Buffer.add_string  buffer (String.make (l - 2) ' ' );
+                    Buffer.add_string buffer "\x1b[0;38;5;15;48;5;12m";
+                    Buffer.add_string  buffer (String.make (l - 2) ' ');
+                    Buffer.add_string buffer  "\x1b[0m";
                     Buffer.add_string buffer s;
                     buffer
     |  _-> buffer
@@ -88,7 +90,7 @@ let add buf s =
   Buffer.add_string buf s
 
 (* https://pkg.go.dev/github.com/charmbracelet/x/ansi *)
-let render_styled_text (area : Types.Area.t) =
+let render_styled_border (area : Types.Area.t) =
   let ansi_escape_codes = Terminal.ansi_escape_codes () in
   let buf = Buffer.create 256 in
   let new_location = ref { x =  0; y = 0} in
@@ -115,28 +117,18 @@ let render_styled_text (area : Types.Area.t) =
   let fd = Unix.descr_of_out_channel stdout in
   ignore (Unix.write_substring fd out 0 (String.length out))
 
-   (* let render_styled_text area = *)
-   (*   Format.pp_set_tags Format.std_formatter true; *)
-   (*   Format.pp_set_formatter_stag_functions Format.std_formatter (tui_stag_functions area); *)
+   let render_styled_text area =
+     Format.pp_set_tags Format.std_formatter true;
+     Format.pp_set_formatter_stag_functions Format.std_formatter (tui_stag_functions area);
 
-   (*   Format.printf "@.@{<HBorder>@}"; *)
-   (*   Format.printf "@.@{<VBorder>@}"; *)
-   (*   Format.printf "@.@{<VBorder>@}"; *)
-   (*   Format.printf "@.@{<VBorder>@}"; *)
+     Format.printf "@[<v 2>@,@{<Highlight>Collaborative editor.@}@]@."
 
-   (*   Format.printf "@[<v 2>@,@{<Highlight>Collaborative editor.@}@]@."; *)
-
-   (*   Format.printf "@.@{<VBorder>@}"; *)
-   (*   Format.printf "@.@{<VBorder>@}"; *)
-   (*   Format.printf "@.@{<VBorder>@}"; *)
-   (*   Format.printf "@.@{<HBorder>@}"; *)
-
-   (*   flush stdout *)
 
 
 
    let render area ?( custom_formatter = Format.std_formatter) buf =
-           (* print_string "\x1b[43;30mHello World!\x1b[0m\n"; *)
+           print_string "\x1b[43;30mHello World!\x1b[0m";
 
-           render_styled_text area
+           let () = render_styled_border area in
+           let () = render_styled_text area in ()
 end

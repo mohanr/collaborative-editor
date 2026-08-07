@@ -3,7 +3,7 @@ open Buffer
 open Types
 
 
-module type TERMINAL_OPERATIONS  = sig
+module type terminal_operations  = sig
     val draw : unit -> unit
     val ansi_escape_codes : unit -> ansi_escape_codes
 
@@ -13,8 +13,8 @@ module type TERMINAL_OPERATIONS  = sig
   end
 end
 
-module Terminal                 (* Consider adding a state Monad *)
-  : TERMINAL_OPERATIONS  = struct
+module Terminal                 (* consider adding a state monad *)
+  : terminal_operations  = struct
 
 let draw() = ()
 
