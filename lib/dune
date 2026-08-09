@@ -3,7 +3,7 @@
 (env (dev (flags (:standard -warn-error -26))))
 (library
  (name collaborative_editor)
- (preprocess (pps ppx_deriving.show ppx_bin_prot))
+ (preprocess (pps ppx_deriving.show ppx_compare ppx_sexp_conv))
  (libraries eio_main )
-(modules terminal types term_driver configurer_intf buffer configure window frame textholder renderer widget )
+(modules terminal types term_driver configurer_intf buffer crdt crdt_intf configure window frame crdt textholder renderer widget )
 )
