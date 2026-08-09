@@ -1,3 +1,6 @@
+open Ppx_compare_lib
+open Ppx_deriving_runtime
+open Base
 
 type style =
   | VeBorder of string
@@ -86,3 +89,32 @@ type ansi_escape_codes = {
   text_cursor_enable: string;
   reset_text_cursor_enable: string
 }
+type identity = {
+  agent : string Option.t;
+  seq : int Option.t
+}
+[@@deriving sexp ,compare]
+
+type item = {
+  content : string;
+  id : identity ;
+  origin_left : identity Option.t;
+  origin_right :identity Option.t;
+  deleted :  bool
+}
+
+type item_list =
+  | Item of item
+  | Empty
+
+type doc ={
+  doc_content : item_list list
+}
+
+
+module type CRDTOperator = sig
+
+  module Crdt_buffer : sig
+    val merge : item list -> item -> item list
+  end
+end
