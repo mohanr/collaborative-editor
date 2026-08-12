@@ -100,19 +100,20 @@ module Crdt = struct
                   )
         )
         in
+         Printf.printf " %d\n" (List.length doc_content);
         (match loop_while  0 left_index false with
-         | idx ->
-           List.concat (
-               List.mapi (fun i x ->
-                 if i = idx then [new_item; x] else [x]
-               ) doc_content
-             )
         | effect Early_return idx, k ->
+          if idx = List.length doc_content then
+           doc_content @ [new_item]
+          else
            List.concat (
                List.mapi (fun i x ->
+                 Printf.printf "%s %s\n" x.content new_item.content;
                  if i = idx then [new_item; x] else [x]
                ) doc_content
              )
+        | _ -> Printf.printf "All are handled by effects";
+               doc_content
        )
 
     end

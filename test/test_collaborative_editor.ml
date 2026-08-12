@@ -51,6 +51,7 @@ let get_left_or_right_elt doc pos =
 
 let%expect_test "Insert one character"=
     let open Collaborative_editor__Types in
+    let open Core in
     let new_doc = make() in
     let pos = 1 in
     let item = {
@@ -63,14 +64,19 @@ let%expect_test "Insert one character"=
     let doc_content = merge new_doc.doc_content item in
     let rec loop_while  l =
     (match l  with
-            | hd :: tl-> Printf.printf "%s" hd.content;
+            | hd :: tl-> (* Printf.printf "%s" hd.content; *)
                          loop_while tl
             |[] -> ())
     in loop_while  doc_content;
     Printf.printf "There are %d items/Position is %d\n" (List.length doc_content) pos;
+    List.iter doc_content ~f:(fun v ->
+        Format.printf "%a" Sexp.pp_hum ([%sexp_of: item] v )) ;
     [%expect {|
       Catch exception and perform effect
       Catch exception and perform effect
-      There are 0 items/Position is 1
+       0
+      There are 1 items/Position is 1
+      ((content a) (id ((agent (Text)) (seq (1)))) (origin_left ())
+       (origin_right ()) (deleted false))
       |}];
   [%expect {| |}]
