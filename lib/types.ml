@@ -102,6 +102,7 @@ type item = {
   origin_right :identity Option.t;
   deleted :  bool
 }
+[@@deriving sexp ,compare]
 
 
 type doc ={

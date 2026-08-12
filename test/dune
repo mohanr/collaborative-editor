@@ -2,6 +2,7 @@
  (name test_collaborative_editor)
  (libraries eio_main eio.mock collaborative_editor)
  (inline_tests)
- (preprocess (pps ppx_bin_prot ppx_deriving.show ppx_inline_test ppx_assert ppx_expect))
+ (preprocess (pps ppx_bin_prot ppx_deriving.show
+                  ppx_sexp_conv ppx_inline_test ppx_assert ppx_expect))
  (modules
           test_collaborative_editor))
