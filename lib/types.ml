@@ -103,12 +103,9 @@ type item = {
   deleted :  bool
 }
 
-type item_list =
-  | Item of item
-  | Empty
 
 type doc ={
-  doc_content : item_list list
+  doc_content : item list
 }
 
 
@@ -116,5 +113,6 @@ module type CRDTOperator = sig
 
   module Crdt_buffer : sig
     val merge : item list -> item -> item list
+    val make : unit -> doc
   end
 end
