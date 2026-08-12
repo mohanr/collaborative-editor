@@ -14,25 +14,13 @@ module Crdt = struct
 
     let content c =
       let list  = List.filter (fun item ->
-              (match item with
-              | Item i ->
-                  Bool.equal  i.deleted false
-              | Empty -> failwith "Empty")) c in
+                               Bool.equal  item.deleted false) c in
       let contents =
             let rec loop_while l1 l2 =
             match l2 with
-            | hd :: tl->
-              (match hd with
-              | Item i ->
-                (match i with
-                   | {content = c;_}->
-                    loop_while ( l1 @ [i.content]) tl
-                )
-              | Empty ->
-                    loop_while l1 tl
-              )
-
-            | [] -> l1
+                   | {content = c;_}:: tl->
+                    loop_while ( l1 @ [c]) tl
+                   | [] -> l1
             in loop_while [] list
      in contents
 
@@ -63,12 +51,18 @@ module Crdt = struct
                            Some ( i, item )
                         else None
                         ) doc_content  in
+      let left_index =
       (match left with
       | Some ( left_index , item ) ->
-            let dest_location = left_index  + 1 in
+             left_index  + 1
+
+      | None ->
+             0
+      )
+      in
             let right = (match new_item.origin_left with
                          | Some id ->
-                           find_index doc_content id item
+                           find_index doc_content id new_item
                          | None -> List.length doc_content
                         )
             in
@@ -106,7 +100,7 @@ module Crdt = struct
                   )
         )
         in
-        (match loop_while  0 dest_location false with
+        (match loop_while  0 left_index false with
          | idx ->
            List.concat (
                List.mapi (fun i x ->
@@ -120,8 +114,6 @@ module Crdt = struct
                ) doc_content
              )
        )
-       | None -> failwith "Merge error"
-      )
 
     end
 
