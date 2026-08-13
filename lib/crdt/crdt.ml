@@ -6,10 +6,35 @@ module Crdt = struct
 
   module Crdt_buffer = struct
 
+   exception Version_error of string
+
+   type _ eff += Failure : string -> item eff
+
+   let get_safe_list_elt doc pos  =
+     try
+
+       List.nth doc.doc_content pos
+
+     with Failure arg ->
+       Effect.perform (Failure arg )
+
+   let get_left_or_right_elt doc pos =
+
+      match get_safe_list_elt doc pos with
+
+      | item -> Some item.id
+
+      | effect Failure s, k ->
+
+      Printf.printf "Catch exception and perform effect\n";
+      None
+
+
     type _ Effect.t += Early_return :  int -> int Effect.t
     let make() =
       {
-        doc_content = []
+        doc_content = [];
+        version = VersionMap.empty
       }
 
     let content c =
@@ -24,6 +49,7 @@ module Crdt = struct
             in loop_while [] list
      in contents
 
+    (*TODO Both 'id' and 'new_item' are passed  *)
     let find_index doc_content id new_item =
        let id_found = List.find_mapi (fun i item ->
                         if ((compare_identity item.id new_item.id  ) = 0) then
@@ -31,39 +57,43 @@ module Crdt = struct
                         else None
                         ) doc_content  in
        (match id_found with
-       | Some ( right_index , item ) -> right_index
-       | None -> -1
+       | Some ( index , item ) -> index
+       | None -> -1 (* failwith "Not found" *)
        )
     (* Example effect handler *)
     (* let tree_enum (type elt) : elt tree -> elt enum = *)
-    (* let module Inv = struct *)
-    (* type _ eff += Next : elt -> unit eff *)
-    (* let tree_enum (t: elt tree) : elt enum = *)
-    (* match tree_iter (fun x -> perform (Next x)) t with *)
-    (* | () -> Done *)
-    (* | effect Next x, k -> More(x, fun () -> continue k ()) *)
-    (* end in *)
-    (* Inv.tree_enum *)
+         (* let module Inv = struct *)
+         (* type _ eff += Next : elt -> unit eff *)
+         (* let tree_enum (t: elt tree) : elt enum = *)
+         (* match tree_iter (fun x -> perform (Next x)) t with *)
+         (* | () -> Done *)
+         (* | effect Next x, k -> More(x, fun () -> continue k ()) *)
+         (* end in *)
+         (* Inv.tree_enum *)
+    let check_version doc new_item =
 
-    let merge doc_content new_item =
-       let left = List.find_mapi (fun i item ->
-                        if ((compare_identity item.id new_item.id  ) = 0) then
-                           Some ( i, item )
-                        else None
-                        ) doc_content  in
-      let left_index =
-      (match left with
-      | Some ( left_index , item ) ->
-             left_index  + 1
+      let identity = new_item.id in
+      let agent = (match identity.agent with
+                 | Some v -> v
+                 | None -> raise (Version_error "CRDT error")
+                 ) in
+      let version_option =                   (* CCMap *)
+        VersionMap.find_opt agent doc.version in
+      let seq = (match version_option with
+                 | Some v -> v + 1
+                 | None -> 0
+                 )
+      in seq
 
-      | None ->
-             0
-      )
-      in
+    let merge doc new_item =
+
+      let _version =  check_version doc new_item in
+
+      let left_index  = (find_index doc.doc_content new_item.id new_item) + 1 in
             let right = (match new_item.origin_left with
                          | Some id ->
-                           find_index doc_content id new_item
-                         | None -> List.length doc_content
+                           find_index doc.doc_content id new_item
+                         | None -> List.length doc.doc_content
                         )
             in
             let rec loop_while i idx scanning =
@@ -73,18 +103,18 @@ module Crdt = struct
               else
                 idx in
 
-                if i = List.length doc_content || i = right then
+                if i = List.length doc.doc_content || i = right then
                   Effect.perform ( Early_return  idx)
                 else(
-                  let other = List.nth doc_content i in
+                  let other = List.nth doc.doc_content i in
                   let other_left =
-                           find_index doc_content other.origin_left new_item
+                           find_index doc.doc_content other.origin_left new_item
                   in
                   let other_right =
                   (match other.origin_right with
                                | Some value ->
-                                find_index doc_content other.origin_right new_item
-                               | None -> List.length doc_content)
+                                find_index doc.doc_content other.origin_right new_item
+                               | None -> List.length doc.doc_content)
                   in
                   if ( other_left < left_index ) || ((other_left = left_index) &&
                                                (other_right= right) &&
@@ -100,22 +130,31 @@ module Crdt = struct
                   )
         )
         in
-         Printf.printf " %d\n" (List.length doc_content);
+         Printf.printf " %d\n" (List.length doc.doc_content);
         (match loop_while  0 left_index false with
         | effect Early_return idx, k ->
-          if idx = List.length doc_content then
-           doc_content @ [new_item]
+          if idx = List.length doc.doc_content then
+           doc.doc_content @ [new_item]
           else
            List.concat (
                List.mapi (fun i x ->
                  Printf.printf "%s %s\n" x.content new_item.content;
                  if i = idx then [new_item; x] else [x]
-               ) doc_content
+               ) doc.doc_content
              )
         | _ -> Printf.printf "All are handled by effects";
-               doc_content
+               doc.doc_content
        )
 
+    let insert doc agent pos text seq =
+    let item = {
+         content = text;
+         id = { agent = agent ; seq = seq  };
+         origin_left = get_left_or_right_elt doc  (pos - 1);
+         origin_right = get_left_or_right_elt doc pos;
+         deleted = false
+       } in
+    merge doc item
     end
 
 end
