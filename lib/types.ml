@@ -1,6 +1,7 @@
 open Ppx_compare_lib
 open Ppx_deriving_runtime
 open Base
+open Containers
 
 type style =
   | VeBorder of string
@@ -90,30 +91,39 @@ type ansi_escape_codes = {
   reset_text_cursor_enable: string
 }
 type identity = {
-  agent : string Option.t;
-  seq : int Option.t
+  agent : string Base.Option.t; (* Containers inferferes *)
+  seq : int Base.Option.t
 }
 [@@deriving sexp ,compare]
 
 type item = {
   content : string;
   id : identity ;
-  origin_left : identity Option.t;
-  origin_right :identity Option.t;
+  origin_left : identity Base.Option.t;
+  origin_right :identity Base.Option.t;
   deleted :  bool
 }
 [@@deriving sexp ,compare]
 
 
-type doc ={
-  doc_content : item list
-}
 
+module  Versionkeyvalue = struct
+  type t = string
+  let compare x x1 =
+    String.compare x x1
+end
+module VersionMap = CCMap.Make(Versionkeyvalue)
+
+type doc ={
+  doc_content : item list;
+  version :  int VersionMap.t                   (* CCMap  *)
+}
 
 module type CRDTOperator = sig
 
   module Crdt_buffer : sig
-    val merge : item list -> item -> item list
+    val merge : doc -> item -> item list
     val make : unit -> doc
+    val insert : doc -> string Option.t-> int ->string->int Option.t->item list
   end
 end
