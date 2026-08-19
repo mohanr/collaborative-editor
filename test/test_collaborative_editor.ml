@@ -33,13 +33,12 @@ let%expect_test "Insert one character"=
     let open Core in
     let new_doc = make() in
     let pos = 1 in
-    let seq = 1 in
     let merged_content = insert
                        new_doc
-                       (Some "Text")
+                       "Text"
                        pos
                        "a"
-                       (Some seq) in
+                       in
     let rec loop_while  l =
     (match l  with
             | hd :: tl-> (* Printf.printf "%s" hd.content; *)

@@ -124,6 +124,6 @@ module type CRDTOperator = sig
   module Crdt_buffer : sig
     val merge : doc -> item -> item list
     val make : unit -> doc
-    val insert : doc -> string Option.t-> int ->string->int Option.t->item list
+    val insert : doc -> string -> int ->string ->item list
   end
 end

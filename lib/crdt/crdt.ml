@@ -70,13 +70,8 @@ module Crdt = struct
          (* | effect Next x, k -> More(x, fun () -> continue k ()) *)
          (* end in *)
          (* Inv.tree_enum *)
-    let check_version doc new_item =
+    let check_version doc agent =
 
-      let identity = new_item.id in
-      let agent = (match identity.agent with
-                 | Some v -> v
-                 | None -> raise (Version_error "CRDT error")
-                 ) in
       let version_option =                   (* CCMap *)
         VersionMap.find_opt agent doc.version in
       let seq = (match version_option with
@@ -85,10 +80,18 @@ module Crdt = struct
                  )
       in seq
 
+    let get_seq identity =
+      (match identity.seq with | Some v -> v
+                                 | None -> failwith "Error in get_seq ")
+    let get_agent identity =
+      (match identity.agent with | Some v -> v
+                                 | None -> failwith "Error in get_agent ")
     let merge doc new_item =
-
-      let _version =  check_version doc new_item in
-
+      let identity = new_item.id in
+      if (check_version doc (get_agent identity))
+                           <> get_seq identity
+          then failwith "Last seq is not correct"
+      else
       let left_index  = (find_index doc.doc_content new_item.id new_item) + 1 in
             let right = (match new_item.origin_left with
                          | Some id ->
@@ -146,10 +149,11 @@ module Crdt = struct
                doc.doc_content
        )
 
-    let insert doc agent pos text seq =
+    let insert doc agent pos text =
+    let version =  check_version doc agent in
     let item = {
          content = text;
-         id = { agent = agent ; seq = seq  };
+         id = { agent = Some agent ; seq = Some version };
          origin_left = get_left_or_right_elt doc  (pos - 1);
          origin_right = get_left_or_right_elt doc pos;
          deleted = false
