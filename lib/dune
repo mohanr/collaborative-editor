@@ -5,5 +5,5 @@
  (name collaborative_editor)
  (preprocess (pps ppx_deriving.show ppx_compare ppx_sexp_conv))
  (libraries core eio_main containers)
-(modules terminal types term_driver configurer_intf buffer crdt crdt_intf configure window frame crdt textholder renderer widget )
+(modules terminal types term_driver document configurer_intf buffer crdt crdt_intf configure window frame crdt textholder renderer widget )
 )
