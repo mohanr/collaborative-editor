@@ -1,6 +1,7 @@
 open Types
 open Eio.Std
 open Effect.Deep
+open Document.Document
 (* https://xavierleroy.org/CdF/2023-2024/5.pdf *)
 module Crdt = struct
 
@@ -80,12 +81,6 @@ module Crdt = struct
                  )
       in seq
 
-    let get_seq identity =
-      (match identity.seq with | Some v -> v
-                                 | None -> failwith "Error in get_seq ")
-    let get_agent identity =
-      (match identity.agent with | Some v -> v
-                                 | None -> failwith "Error in get_agent ")
     let merge doc new_item =
       let identity = new_item.id in
       if (check_version doc (get_agent identity))
