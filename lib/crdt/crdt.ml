@@ -1,7 +1,6 @@
 open Types
 open Eio.Std
 open Effect.Deep
-open Document.Document
 (* https://xavierleroy.org/CdF/2023-2024/5.pdf *)
 module Crdt = struct
 

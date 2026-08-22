@@ -53,7 +53,7 @@ let%expect_test "Insert one character"=
       Catch exception and perform effect
        0
       There are 1 items/Position is 1
-      ((content a) (id ((agent (Text)) (seq (1)))) (origin_left ())
+      ((content a) (id ((agent (Text)) (seq (0)))) (origin_left ())
        (origin_right ()) (deleted false))
       |}];
   [%expect {| |}]
