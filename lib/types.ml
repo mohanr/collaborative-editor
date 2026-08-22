@@ -127,3 +127,13 @@ module type CRDTOperator = sig
     val insert : doc -> string -> int ->string ->item list
   end
 end
+
+ let get_seq identity =
+   (match identity.seq with | Some v -> v
+                              | None -> failwith "Error in get_seq ")
+ let get_agent identity =
+   (match identity.agent with | Some v -> v
+                              | None -> failwith "Error in get_agent ")
+ let get_identity identity =
+   (match identity with | Some v -> v
+                        | None -> failwith "Error in get_identity ")
