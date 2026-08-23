@@ -50,6 +50,7 @@ module Crdt = struct
      in contents
 
     (*TODO Both 'id' and 'new_item' are passed  *)
+
     let find_index doc_content id new_item =
        let id_found = List.find_mapi (fun i item ->
                         if ((compare_identity item.id new_item.id  ) = 0) then
@@ -60,6 +61,7 @@ module Crdt = struct
        | Some ( index , item ) -> index
        | None -> -1 (* failwith "Not found" *)
        )
+
     (* Example effect handler *)
     (* let tree_enum (type elt) : elt tree -> elt enum = *)
          (* let module Inv = struct *)
@@ -86,6 +88,7 @@ module Crdt = struct
                            <> get_seq identity
           then failwith "Last seq is not correct"
       else
+
       let left_index  = (find_index doc.doc_content new_item.id new_item) + 1 in
             let right = (match new_item.origin_left with
                          | Some id ->
