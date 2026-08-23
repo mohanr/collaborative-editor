@@ -4,7 +4,7 @@ open Crdt
 
 module Document = struct
 
-type _ Effect.t += Effect_continue :  unit -> unit Effect.t
+type _ Effect.t += Effect_merger_error:  item list -> item list Effect.t
 
 type item_array =
     (item Option.t) CCArray.t
@@ -25,58 +25,81 @@ let check_veracity_of_insertion item doc_content =
    let agent = get_agent item.id in
    let seq = get_seq  item.id in
  not (check_version1 item.id doc_content.version) &&
- (seq = 0 && check_version1 {agent = Some agent; seq = Some (seq - 1) }
+ (seq = 0 || check_version1 {agent = Some agent; seq = Some (seq - 1) }
                            doc_content.version)
  (* Left and Right should be present already *)
- && (check_version1 (get_identity item.origin_left) doc_content.version)
- && (check_version1 (get_identity item.origin_right) doc_content.version)
+ && (match item.origin_left with
+    | None -> true
+    | Some _ -> check_version1 (get_identity item.origin_left) doc_content.version)
+ && (match item.origin_right with
+    | None -> true
+    | Some _ -> check_version1 (get_identity item.origin_right) doc_content.version)
 
 let merge_both  src_content dest_content =
+Printf.printf " %d,  %d\n"
+    (List.length src_content.doc_content)
+    (List.length dest_content.doc_content);
+
   let get_item item =             (* Since I mapped to Option.t below *)
       (match item with | Some v -> v
                        | None -> failwith "Error in merge_both ")
   in
   let check_for_missing_content = (* What is this? *)
-   List.filter ( fun item -> check_version1 item.id src_content.version )
+   List.filter ( fun item -> not (check_version1 item.id dest_content.version))
      src_content.doc_content |> List.map (fun v -> Some v) in
+Printf.printf "src doc_content length: %d\n" (List.length src_content.doc_content);
    let missing_content_length = List.length check_for_missing_content  in
+   Printf.printf " %d\n" missing_content_length;
   (* What is the length of this missing content ? *)
 
-  let rec loop_while_outer i merged_count =
+  let rec loop_while_outer iteml i merged_count missing =
+     Printf.printf "outer: i=%d, missing_len=%d, non_null=%d\n"
+      i missing_content_length
+      (List.length (List.filter Option.is_some missing));
     if i > 0 then(
-      let count =
-      let rec loop_while_inner  j merged_count l  =
-       if i < j then (
-        let item = List.nth check_for_missing_content i in
-           if not (check_veracity_of_insertion (get_item item ) dest_content) then
-            loop_while_inner j merged_count l
+      let count,l, l1 =
+      let rec loop_while_inner  j merged_count l l1 =
+       if j < missing_content_length then (
+        let item = List.nth check_for_missing_content j in
+        let valid =
+          check_veracity_of_insertion (get_item item) dest_content
+        in
+
+        Printf.printf "Check = %b\n" valid;
+
+        if not valid then
+
+            loop_while_inner (j + 1) merged_count l l1
            else(
-             let _item_list = CRDTOp.Crdt_buffer.merge dest_content (get_item item )  in
+             let item_list = CRDTOp.Crdt_buffer.merge dest_content (get_item item )  in
              (* 'List' requires this inefficient function. Array ? *)
              let l =
              List.concat (
                  List.mapi (fun i x ->
                    if i = j then [None] else [x]
-                 ) check_for_missing_content
+                 ) l
                ) in
-             loop_while_inner  (missing_content_length - 1)
-                               (merged_count + 1) l
+             loop_while_inner  (j + 1)
+                               (merged_count + 1) l item_list
            )
-        ) else merged_count
+        ) else merged_count,l, l1
         in
-             loop_while_inner    missing_content_length
-                                       0
-                                       check_for_missing_content
+             loop_while_inner
+                                 0
+                                 0
+                                 check_for_missing_content
+                                 iteml
           in
           if count = 0 then
-            Effect.perform (Effect_continue ())
+            Effect.perform (Effect_merger_error iteml)
           else
-            loop_while_outer (i - 1) missing_content_length
-    ) else ()
+            loop_while_outer l1 (i - 1) 0 l
+    ) else iteml
     in
-      (match loop_while_outer   (List.length check_for_missing_content) 0  with
-        | effect Effect_continue (), k -> Printf.printf "Effect_continue ";
-        | _ -> Printf.printf "All are handled by effects";
+      (match loop_while_outer []  missing_content_length 0 check_for_missing_content  with
+        | effect Effect_merger_error v, k -> let() = Printf.printf "Not merging properly"
+                                                 in v
+        | iteml -> iteml;
        )
 
 end
