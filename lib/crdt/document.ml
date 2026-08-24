@@ -4,7 +4,7 @@ open Crdt
 
 module Document = struct
 
-type _ Effect.t += Effect_merger_error:  item list -> item list Effect.t
+type _ Effect.t += Effect_merger_error:  doc -> doc Effect.t
 
 type item_array =
     (item Option.t) CCArray.t
@@ -35,6 +35,12 @@ let check_veracity_of_insertion item doc_content =
     | None -> true
     | Some _ -> check_version1 (get_identity item.origin_right) doc_content.version)
 
+let increment key m =
+  VersionMap.update key (function
+    | None ->  Some (-1)         (* Key does not exist, start at 1 *)
+    | Some v -> Some (v + 1) (* Key exists, increment value *)
+  ) m
+
 let merge_both  src_content dest_content =
 Printf.printf " %d,  %d\n"
     (List.length src_content.doc_content)
@@ -52,7 +58,7 @@ Printf.printf "src doc_content length: %d\n" (List.length src_content.doc_conten
    Printf.printf " %d\n" missing_content_length;
   (* What is the length of this missing content ? *)
 
-  let rec loop_while_outer iteml i merged_count missing =
+  let rec loop_while_outer doc i merged_count missing =
      Printf.printf "outer: i=%d, missing_len=%d, non_null=%d\n"
       i missing_content_length
       (List.length (List.filter Option.is_some missing));
@@ -73,6 +79,14 @@ Printf.printf "src doc_content length: %d\n" (List.length src_content.doc_conten
            else(
              let item_list = CRDTOp.Crdt_buffer.merge dest_content (get_item item )  in
              (* 'List' requires this inefficient function. Array ? *)
+             let item = get_item item in
+             let updated_version = increment (get_agent item.id) l1.version in
+             let new_doc =
+             {
+               doc_content = item_list ;
+               version = updated_version
+             }
+             in
              let l =
              List.concat (
                  List.mapi (fun i x ->
@@ -80,7 +94,7 @@ Printf.printf "src doc_content length: %d\n" (List.length src_content.doc_conten
                  ) l
                ) in
              loop_while_inner  (j + 1)
-                               (merged_count + 1) l item_list
+                               (merged_count + 1) l new_doc
            )
         ) else merged_count,l, l1
         in
@@ -88,15 +102,15 @@ Printf.printf "src doc_content length: %d\n" (List.length src_content.doc_conten
                                  0
                                  0
                                  check_for_missing_content
-                                 iteml
+                                 doc
           in
           if count = 0 then
-            Effect.perform (Effect_merger_error iteml)
+            Effect.perform (Effect_merger_error doc)
           else
             loop_while_outer l1 (i - 1) 0 l
-    ) else iteml
+    ) else doc
     in
-      (match loop_while_outer []  missing_content_length 0 check_for_missing_content  with
+      (match loop_while_outer (CRDTOp.Crdt_buffer.make ())  missing_content_length 0 check_for_missing_content  with
         | effect Effect_merger_error v, k -> let() = Printf.printf "Not merging properly"
                                                  in v
         | iteml -> iteml;

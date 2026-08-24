@@ -52,6 +52,7 @@ module Crdt = struct
     (*TODO Both 'id' and 'new_item' are passed  *)
 
     let find_index doc_content id new_item =
+
        let id_found = List.find_mapi (fun i item ->
                         if ((compare_identity item.id new_item.id  ) = 0) then
                            Some ( i, item )
@@ -89,8 +90,8 @@ module Crdt = struct
           then failwith "Last seq is not correct"
       else
 
-      let left_index  = (find_index doc.doc_content new_item.id new_item) + 1 in
-            let right = (match new_item.origin_left with
+      let left_index  = (find_index doc.doc_content new_item.origin_left new_item) + 1 in
+            let right = (match new_item.origin_right with
                          | Some id ->
                            find_index doc.doc_content id new_item
                          | None -> List.length doc.doc_content
@@ -116,9 +117,10 @@ module Crdt = struct
                                 find_index doc.doc_content other.origin_right new_item
                                | None -> List.length doc.doc_content)
                   in
+
                   if ( other_left < left_index ) || ((other_left = left_index) &&
-                                               (other_right= right) &&
-                                               ( new_item.id.agent = other.id.agent)) then
+                     (other_right= right) &&
+                    ( compare_identity new_item.id other.id < 0)) then
 
                     Effect.perform ( Early_return  idx)
                   else(
@@ -155,7 +157,14 @@ module Crdt = struct
          origin_right = get_left_or_right_elt doc pos;
          deleted = false
        } in
-    merge doc item
+    let updated_content = merge doc item in
+
+   let updated_version = VersionMap.add agent (version + 1) doc.version  in
+
+  {
+    doc_content = updated_content;
+    version = updated_version
+  }
     end
 
 end
