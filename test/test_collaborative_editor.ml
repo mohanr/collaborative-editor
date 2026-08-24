@@ -44,78 +44,89 @@ let%expect_test "Insert one character"=
     (*                      loop_while tl *)
     (*         |[] -> ()) *)
     (* in loop_while  merged_content; *)
-    Printf.printf "There are %d items/Position is %d\n" (List.length merged_content) pos;
-    List.iter merged_content ~f:(fun v ->
+    List.iter merged_content.doc_content ~f:(fun v ->
         Format.printf "%a" Sexp.pp_hum ([%sexp_of: item] v )) ;
     [%expect {|
       Catch exception and perform effect
       Catch exception and perform effect
        0
-      There are 1 items/Position is 1
       ((content a) (id ((agent (Text)) (seq (0)))) (origin_left ())
        (origin_right ()) (deleted false))
       |}]
 
+let insert  new_doc  pos c =
+     insert new_doc "Text" pos c
+
 let%expect_test "Merge two documents"=
     let new_doc = make() in
-    let pos = 1 in
-    let merged_content = insert
-                       new_doc
-                       "Text"
-                       pos
-                       "a"
-                       in
-    let new_doc = { new_doc with doc_content = merged_content } in
-    Printf.printf "There are %d items/Position is %d\n"
-      (List.length merged_content) pos;
-    List.iter merged_content ~f:(fun v ->
+    let new_doc = insert new_doc 1 "a" in
+    List.iter new_doc.doc_content ~f:(fun v ->
         Format.printf "%a" Sexp.pp_hum ([%sexp_of: item] v )) ;
     [%expect {|
       Catch exception and perform effect
       Catch exception and perform effect
        0
-      There are 1 items/Position is 1
       ((content a) (id ((agent (Text)) (seq (0)))) (origin_left ())
        (origin_right ()) (deleted false))
       |}];
     let new_doc1 = make() in
-    let pos = 1 in
-    let merged_content1 = insert
-                       new_doc1
-                       "Text1"
-                       pos
-                       "a"
-                       in
-    let new_doc1 = { new_doc1 with doc_content = merged_content1 } in
-    Printf.printf "There are %d items/Position is %d\n" (List.length merged_content) pos;
-    List.iter merged_content1 ~f:(fun v ->
-        Format.printf "%a" Sexp.pp_hum ([%sexp_of: item] v )) ;
-    [%expect {|
-      Catch exception and perform effect
-      Catch exception and perform effect
-       0
-      There are 1 items/Position is 1
-      ((content a) (id ((agent (Text1)) (seq (0)))) (origin_left ())
-       (origin_right ()) (deleted false))
-      |}];
     let open Collaborative_editor__Document.Document in
 
-    let merged_doc = merge_both new_doc new_doc1 in
+    let new_doc1 = merge_both new_doc new_doc1 in
 
-    List.iter merged_doc ~f:(fun v ->
+    List.iter new_doc1.doc_content ~f:(fun v ->
         Format.printf "%a" Sexp.pp_hum ([%sexp_of: item] v )) ;
     [%expect {|
-       1,  1
+       1,  0
       src doc_content length: 1
        1
       outer: i=1, missing_len=1, non_null=1
       Check = true
-       1
-      a a
+       0
       outer: i=0, missing_len=1, non_null=0
       ((content a) (id ((agent (Text)) (seq (0)))) (origin_left ())
-       (origin_right ()) (deleted false))((content a)
-                                          (id ((agent (Text1)) (seq (0))))
-                                          (origin_left ()) (origin_right ())
-                                          (deleted false))
-      |}]
+       (origin_right ()) (deleted false))
+      |}];
+      let merged_content = insert new_doc 2 "b" in
+      let new_doc = { new_doc1 with doc_content = merged_content.doc_content } in
+      let merged_content = insert new_doc 1 "c" in
+      let new_doc = { new_doc with doc_content = merged_content.doc_content } in
+      let merged_doc = merge_both new_doc new_doc1 in
+      List.iter merged_doc.doc_content ~f:(fun v ->
+        Format.printf "%a" Sexp.pp_hum ([%sexp_of: item] v )) ;
+      [%expect {|
+        Catch exception and perform effect
+        Catch exception and perform effect
+         1
+        a b
+         2
+        b c
+        a c
+         3,  1
+        src doc_content length: 3
+         3
+        outer: i=3, missing_len=3, non_null=3
+        Check = false
+        Check = false
+        Check = true
+         1
+        a a
+        outer: i=2, missing_len=3, non_null=2
+        Check = false
+        Check = false
+        Check = true
+         1
+        a a
+        outer: i=1, missing_len=3, non_null=2
+        Check = false
+        Check = false
+        Check = true
+         1
+        a a
+        outer: i=0, missing_len=3, non_null=2
+        ((content a) (id ((agent (Text)) (seq (0)))) (origin_left ())
+         (origin_right ()) (deleted false))((content a)
+                                            (id ((agent (Text)) (seq (0))))
+                                            (origin_left ()) (origin_right ())
+                                            (deleted false))
+        |}];
