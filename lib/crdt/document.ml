@@ -28,6 +28,7 @@ let check_veracity_of_insertion item doc_content =
  (seq = 0 || check_version1 {agent = Some agent; seq = Some (seq - 1) }
                            doc_content.version)
  (* Left and Right should be present already *)
+
  && (match item.origin_left with
     | None -> true
     | Some _ -> check_version1 (get_identity item.origin_left) doc_content.version)
@@ -35,21 +36,15 @@ let check_veracity_of_insertion item doc_content =
     | None -> true
     | Some _ -> check_version1 (get_identity item.origin_right) doc_content.version)
 
-let increment key m =
-  VersionMap.update key (function
-    | None ->  Some (-1)         (* Key does not exist, start at 1 *)
-    | Some v -> Some (v + 1) (* Key exists, increment value *)
-  ) m
+let increment agent seq l1  =
+let current_max = VersionMap.find_opt agent l1.version |> Option.value ~default:(-1) in
+  VersionMap.add agent (max current_max seq) l1.version
 
 let merge_both  src_content dest_content =
 Printf.printf " %d,  %d\n"
     (List.length src_content.doc_content)
     (List.length dest_content.doc_content);
 
-  let get_item item =             (* Since I mapped to Option.t below *)
-      (match item with | Some v -> v
-                       | None -> failwith "Error in merge_both ")
-  in
   let check_for_missing_content = (* What is this? *)
    List.filter ( fun item -> not (check_version1 item.id dest_content.version))
      src_content.doc_content |> List.map (fun v -> Some v) in
@@ -66,10 +61,10 @@ Printf.printf "src doc_content length: %d\n" (List.length src_content.doc_conten
       let count,l, l1 =
       let rec loop_while_inner  j merged_count l l1 =
        if j < missing_content_length then (
-        let item = List.nth check_for_missing_content j in
-        let valid =
-          check_veracity_of_insertion (get_item item) dest_content
-        in
+        match List.nth l j with
+        | None -> loop_while_inner (j + 1) merged_count l l1
+        | Some item ->
+        let valid = check_veracity_of_insertion item l1 in
 
         Printf.printf "Check = %b\n" valid;
 
@@ -77,10 +72,9 @@ Printf.printf "src doc_content length: %d\n" (List.length src_content.doc_conten
 
             loop_while_inner (j + 1) merged_count l l1
            else(
-             let item_list = CRDTOp.Crdt_buffer.merge dest_content (get_item item )  in
+             let item_list = CRDTOp.Crdt_buffer.merge l1 item in
              (* 'List' requires this inefficient function. Array ? *)
-             let item = get_item item in
-             let updated_version = increment (get_agent item.id) l1.version in
+             let updated_version = increment (get_agent item.id) (get_seq item.id) l1 in
              let new_doc =
              {
                doc_content = item_list ;
@@ -101,7 +95,7 @@ Printf.printf "src doc_content length: %d\n" (List.length src_content.doc_conten
              loop_while_inner
                                  0
                                  0
-                                 check_for_missing_content
+                                 missing
                                  doc
           in
           if count = 0 then
@@ -110,7 +104,7 @@ Printf.printf "src doc_content length: %d\n" (List.length src_content.doc_conten
             loop_while_outer l1 (i - 1) 0 l
     ) else doc
     in
-      (match loop_while_outer (CRDTOp.Crdt_buffer.make ())  missing_content_length 0 check_for_missing_content  with
+      (match loop_while_outer dest_content  missing_content_length 0 check_for_missing_content  with
         | effect Effect_merger_error v, k -> let() = Printf.printf "Not merging properly"
                                                  in v
         | iteml -> iteml;

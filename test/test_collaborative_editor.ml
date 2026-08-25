@@ -48,7 +48,6 @@ let%expect_test "Insert one character"=
         Format.printf "%a" Sexp.pp_hum ([%sexp_of: item] v )) ;
     [%expect {|
       Catch exception and perform effect
-      Catch exception and perform effect
        0
       ((content a) (id ((agent (Text)) (seq (0)))) (origin_left ())
        (origin_right ()) (deleted false))
@@ -63,7 +62,6 @@ let%expect_test "Merge two documents"=
     List.iter new_doc.doc_content ~f:(fun v ->
         Format.printf "%a" Sexp.pp_hum ([%sexp_of: item] v )) ;
     [%expect {|
-      Catch exception and perform effect
       Catch exception and perform effect
        0
       ((content a) (id ((agent (Text)) (seq (0)))) (origin_left ())
@@ -88,45 +86,32 @@ let%expect_test "Merge two documents"=
        (origin_right ()) (deleted false))
       |}];
       let merged_content = insert new_doc 2 "b" in
-      let new_doc = { new_doc1 with doc_content = merged_content.doc_content } in
-      let merged_content = insert new_doc 1 "c" in
-      let new_doc = { new_doc with doc_content = merged_content.doc_content } in
-      let merged_doc = merge_both new_doc new_doc1 in
-      List.iter merged_doc.doc_content ~f:(fun v ->
-        Format.printf "%a" Sexp.pp_hum ([%sexp_of: item] v )) ;
+      let merged_content = insert merged_content 1 "c" in
+      let merged_doc = merge_both merged_content new_doc1 in
+      let merged_text =
+        List.map merged_doc.doc_content ~f:(fun item -> item.content)
+        |> String.concat ~sep:" "
+      in
+      assert (String.equal merged_text "c a b");
+      Format.printf "%s" merged_text;
       [%expect {|
         Catch exception and perform effect
-        Catch exception and perform effect
          1
-        a b
          2
-        b c
         a c
+        b c
          3,  1
         src doc_content length: 3
-         3
-        outer: i=3, missing_len=3, non_null=3
-        Check = false
-        Check = false
-        Check = true
-         1
-        a a
-        outer: i=2, missing_len=3, non_null=2
-        Check = false
+         2
+        outer: i=2, missing_len=2, non_null=2
         Check = false
         Check = true
          1
-        a a
-        outer: i=1, missing_len=3, non_null=2
-        Check = false
-        Check = false
+        outer: i=1, missing_len=2, non_null=1
         Check = true
-         1
-        a a
-        outer: i=0, missing_len=3, non_null=2
-        ((content a) (id ((agent (Text)) (seq (0)))) (origin_left ())
-         (origin_right ()) (deleted false))((content a)
-                                            (id ((agent (Text)) (seq (0))))
-                                            (origin_left ()) (origin_right ())
-                                            (deleted false))
+         2
+        a c
+        b c
+        outer: i=0, missing_len=2, non_null=0
+        c a b
         |}];

@@ -19,15 +19,13 @@ module Crdt = struct
        Effect.perform (Failure arg )
 
    let get_left_or_right_elt doc pos =
-
-      match get_safe_list_elt doc pos with
-
-      | item -> Some item.id
-
-      | effect Failure s, k ->
-
-      Printf.printf "Catch exception and perform effect\n";
-      None
+      if pos < 0 then None
+      else
+        match get_safe_list_elt doc pos with
+        | item -> Some item.id
+        | effect Failure s, k ->
+          Printf.printf "Catch exception and perform effect\n";
+          None
 
 
     type _ Effect.t += Early_return :  int -> int Effect.t
@@ -49,19 +47,15 @@ module Crdt = struct
             in loop_while [] list
      in contents
 
-    (*TODO Both 'id' and 'new_item' are passed  *)
-
-    let find_index doc_content id new_item =
-
-       let id_found = List.find_mapi (fun i item ->
-                        if ((compare_identity item.id new_item.id  ) = 0) then
-                           Some ( i, item )
-                        else None
-                        ) doc_content  in
-       (match id_found with
-       | Some ( index , item ) -> index
-       | None -> -1 (* failwith "Not found" *)
-       )
+    let find_index doc_content = function
+      | None -> -1
+      | Some id ->
+        let id_found = List.find_mapi (fun i item ->
+          if compare_identity item.id id = 0 then Some (i, item) else None
+        ) doc_content in
+        match id_found with
+        | Some (index, _) -> index
+        | None -> -1
 
     (* Example effect handler *)
     (* let tree_enum (type elt) : elt tree -> elt enum = *)
@@ -90,10 +84,11 @@ module Crdt = struct
           then failwith "Last seq is not correct"
       else
 
-      let left_index  = (find_index doc.doc_content new_item.origin_left new_item) + 1 in
+      let left = find_index doc.doc_content new_item.origin_left in
+      let left_index = left + 1 in
             let right = (match new_item.origin_right with
                          | Some id ->
-                           find_index doc.doc_content id new_item
+                           find_index doc.doc_content (Some id)
                          | None -> List.length doc.doc_content
                         )
             in
@@ -109,23 +104,23 @@ module Crdt = struct
                 else(
                   let other = List.nth doc.doc_content i in
                   let other_left =
-                           find_index doc.doc_content other.origin_left new_item
+                           find_index doc.doc_content other.origin_left
                   in
                   let other_right =
                   (match other.origin_right with
                                | Some value ->
-                                find_index doc.doc_content other.origin_right new_item
+                                find_index doc.doc_content (Some value)
                                | None -> List.length doc.doc_content)
                   in
 
-                  if ( other_left < left_index ) || ((other_left = left_index) &&
+                  if ( other_left < left ) || ((other_left = left) &&
                      (other_right= right) &&
-                    ( compare_identity new_item.id other.id < 0)) then
+                    (String.compare (get_agent new_item.id) (get_agent other.id) < 0)) then
 
                     Effect.perform ( Early_return  idx)
                   else(
                        loop_while (i + 1) idx
-                         (if other_left = left_index then
+                         (if other_left = left then
                             other_right < right
                          else
                             scanning)
@@ -133,7 +128,7 @@ module Crdt = struct
         )
         in
          Printf.printf " %d\n" (List.length doc.doc_content);
-        (match loop_while  0 left_index false with
+        (match loop_while left_index left_index false with
         | effect Early_return idx, k ->
           if idx = List.length doc.doc_content then
            doc.doc_content @ [new_item]
@@ -153,13 +148,13 @@ module Crdt = struct
     let item = {
          content = text;
          id = { agent = Some agent ; seq = Some version };
-         origin_left = get_left_or_right_elt doc  (pos - 1);
-         origin_right = get_left_or_right_elt doc pos;
+         origin_left = get_left_or_right_elt doc  (pos - 2);
+         origin_right = get_left_or_right_elt doc (pos - 1);
          deleted = false
        } in
     let updated_content = merge doc item in
 
-   let updated_version = VersionMap.add agent (version + 1) doc.version  in
+   let updated_version = VersionMap.add agent version doc.version  in
 
   {
     doc_content = updated_content;
