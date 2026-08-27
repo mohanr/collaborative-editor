@@ -41,22 +41,17 @@ let current_max = VersionMap.find_opt agent l1.version |> Option.value ~default:
   VersionMap.add agent (max current_max seq) l1.version
 
 let merge_both  src_content dest_content =
-Printf.printf " %d,  %d\n"
-    (List.length src_content.doc_content)
-    (List.length dest_content.doc_content);
 
   let check_for_missing_content = (* What is this? *)
    List.filter ( fun item -> not (check_version1 item.id dest_content.version))
      src_content.doc_content |> List.map (fun v -> Some v) in
-Printf.printf "src doc_content length: %d\n" (List.length src_content.doc_content);
    let missing_content_length = List.length check_for_missing_content  in
-   Printf.printf " %d\n" missing_content_length;
   (* What is the length of this missing content ? *)
 
   let rec loop_while_outer doc i merged_count missing =
-     Printf.printf "outer: i=%d, missing_len=%d, non_null=%d\n"
-      i missing_content_length
-      (List.length (List.filter Option.is_some missing));
+     (* Printf.printf "outer: i=%d, missing_len=%d, non_null=%d\n" *)
+     (*  i missing_content_length *)
+     (*  (List.length (List.filter Option.is_some missing)); *)
     if i > 0 then(
       let count,l, l1 =
       let rec loop_while_inner  j merged_count l l1 =
@@ -66,7 +61,6 @@ Printf.printf "src doc_content length: %d\n" (List.length src_content.doc_conten
         | Some item ->
         let valid = check_veracity_of_insertion item l1 in
 
-        Printf.printf "Check = %b\n" valid;
 
         if not valid then
 
