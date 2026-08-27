@@ -16,6 +16,10 @@ module Crdt = struct
        List.nth doc.doc_content pos
 
      with Failure arg ->
+       let open Sexplib in
+       Printf.printf "There is no character at position %d\n" pos;
+       List.iter (fun v ->
+        Format.printf "Content %a\n" Sexp.pp_hum ([%sexp_of: item] v )) doc.doc_content ;
        Effect.perform (Failure arg )
 
    let get_left_or_right_elt doc pos =
@@ -24,7 +28,6 @@ module Crdt = struct
         match get_safe_list_elt doc pos with
         | item -> Some item.id
         | effect Failure s, k ->
-          Printf.printf "Catch exception and perform effect\n";
           None
 
 
@@ -127,7 +130,6 @@ module Crdt = struct
                   )
         )
         in
-         Printf.printf " %d\n" (List.length doc.doc_content);
         (match loop_while left_index left_index false with
         | effect Early_return idx, k ->
           if idx = List.length doc.doc_content then
@@ -135,7 +137,8 @@ module Crdt = struct
           else
            List.concat (
                List.mapi (fun i x ->
-                 Printf.printf "%s %s\n" x.content new_item.content;
+                 (* Printf.printf "%s %s\n" x.content new_item.content; *)
+
                  if i = idx then [new_item; x] else [x]
                ) doc.doc_content
              )
