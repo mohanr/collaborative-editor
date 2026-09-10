@@ -69,6 +69,11 @@ type test_driver = {
     pos: int * int
 }
 type plain = {
+  left_middle : string;
+  cross_middle:  string;
+  right_left  :     string;
+  top_middle : string;
+  bottom_middle:  string;
     top_left: string;
     top_right: string;
     bottom_left: string;

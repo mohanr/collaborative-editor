@@ -8,6 +8,12 @@ module Border = Set.Make(struct
 end)
 
 let get_plain_style () = {
+
+  left_middle = "├";
+  cross_middle = "┼";
+  right_left      = "┤";
+  top_middle = "┬";
+  bottom_middle = "┴";
   top_left      = "┌";
   top_right     = "┐";
   bottom_left   = "└";

@@ -1,10 +1,9 @@
-
 module MakeConfigurer = struct
 
 type  config = {
 
-  width : int;
-  height : int;
+    width : int;
+    height : int;
 
 }
 end
