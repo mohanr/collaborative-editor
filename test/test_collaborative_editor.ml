@@ -5,6 +5,8 @@ open Eio.Std
 open Effect.Deep
 open Core
 open Collaborative_editor__Types
+open Collaborative_editor__Layout_types
+open Collaborative_editor__Layout_configurer_intf
 
 let create_config_node () : (module Configurer)=
 
@@ -13,15 +15,16 @@ let create_config_node () : (module Configurer)=
    include MakeConfigurer
    (* Default ? *)
    let config = {
-    width = 5;
-    height = 5
+
+    fallback = false;
+    nesting_level = 0;
+    linebuffer_count = 0;
+    linetext_length = 0;
+    flatten = false;
+    can_backtrack = false;
+    resume_at = 0;
    }
 
-   let set_size w h =
-    {
-    width = w;
-    height =h;
-   }
 
 
   end in
@@ -77,12 +80,53 @@ let%expect_test "Merge two documents"=
         List.map merged_doc.doc_content ~f:(fun item -> item.content)
         |> String.concat ~sep:" "
       in
+      List.iter merged_doc.doc_content ~f:(fun v ->
+        Format.printf "%a\n" Sexp.pp_hum ([%sexp_of: item] v ))
+        ;
       assert (String.equal merged_text "c a b");
       Format.printf "\n%s" merged_text;
       [%expect {|
         There is no character at position 1
         Content ((content a) (id ((agent (Text)) (seq (0)))) (origin_left ())
                  (origin_right ()) (deleted false))
+        ((content c)
+                                                     (id ((agent (Text)) (seq (2))))
+                                                     (origin_left ())
+                                                     (origin_right
+                                                      (((agent (Text)) (seq (0)))))
+                                                     (deleted false))
+        ((content a)
+                                                                       (id
+                                                                        ((agent
+                                                                          (Text))
+                                                                         (seq (0))))
+                                                                       (origin_left
+                                                                        ())
+                                                                       (origin_right
+                                                                        ())
+                                                                       (deleted
+                                                                        false))
+
+        ((content b) (id ((agent (Text)) (seq (1))))
+         (origin_left (((agent (Text)) (seq (0))))) (origin_right ())
+         (deleted false))
 
         c a b
         |}];
+        VersionMap.iter (fun k v ->
+        Format.printf "%a %a\n" Sexp.pp_hum ([%sexp_of: string] k )
+           Sexp.pp_hum ([%sexp_of: int] v )) merged_doc.version;
+        (* print_s [%sexp (some_map : int Int.Map.t)] *)
+
+  [%expect {| Text 2 |}]
+
+let%expect_test "Test console"=
+  let open Collaborative_editor__Consoletable.ConsoleTable in
+  let rows = [] in
+  let  rows = rows @ [{ row_data = "OpenAI";
+                        cell_data = String_data (Some "Navier Stokes")}] in
+  Printf.printf "%s\n" (render_table  rows  "centre");
+  [%expect {|
+    ┌────────┐
+    │OpenAI│
+    |}]
