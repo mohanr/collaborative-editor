@@ -127,6 +127,15 @@ let%expect_test "Test console"=
                         cell_data = String_data (Some "Navier Stokes")}] in
   Printf.printf "%s\n" (render_table  rows  "centre");
   [%expect {|
-    ┌────────┐
-    │OpenAI│
+    Columns 2
+    Columns 2
+    Columns 2
+    Columns 2
+    Widths 2
+    Columns 2
+    Columns 2
+    Columns 2
+    Widths 2
+    ┌────────┬───────────────┐
+    │OpenAI Navier Stokes│
     |}]

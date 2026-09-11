@@ -104,28 +104,39 @@ let render_table  rows  alignment  =
   let columns =
   let rec loop_while_rows row columns=
     match row with
-    | { row_data = rd ; _ } :: tl ->
+    | { row_data = rd ; cell_data = cd } :: tl ->
                               let col = (match (List.find_opt (fun v -> v = rd)
                                                           columns)  with
                                   | Some found -> columns
                                   | None -> columns @ [rd]
                                ) in
-                               loop_while_rows tl col
+                              let col1 = (match (List.find_opt
+                                                  (fun v -> v = cell_text cd)
+                                                          col)  with
+                                  | Some found -> col
+                                  | None -> col @ [cell_text cd]
+                               ) in
+
+                               loop_while_rows tl col1
     |[] -> columns
 
   in loop_while_rows rows []
   in
   let max_column_width (rows: row list)  =
-    List.map( fun name ->
+    Printf.printf "Columns %d\n" (List.length columns);
+    List.mapi(fun index name ->
     List.fold_left max 0
              (List.fold_left
                   (fun acc row ->
+                    if index = 0 then
                     match row with
                      | { row_data = rd ; _ }  ->
-                       if String.equal rd name then
                                acc @  [String.length (cell_text (String_data
                                                                    (Some rd)))]
-                       else acc
+                   else
+                   match row with
+                     | { row_data = rd ; cell_data = cd }  ->
+                               acc @  [String.length (cell_text  cd)]
                    ) [] rows )
     ) columns
   in
@@ -135,7 +146,12 @@ let render_table  rows  alignment  =
           regex_split ( if is_header then
                            name
                          else
-                           cell_text (String_data (Some row.row_data)))
+                           match index with
+                            | 0 -> cell_text (String_data (Some row.row_data))
+                            | 1 -> cell_text  row.cell_data
+                            | _ -> failwith "Wrong index"
+
+                        )
                         (List.nth
                         (max_column_width rows )
                          index)
@@ -150,6 +166,7 @@ let render_table  rows  alignment  =
                           max acc (List.length v)) 0 cells in
     let rendered_area =
        let rec loop_while_render render_area line height=
+           Printf.printf "Widths %d\n" (List.length (max_column_width rows));
            if line < height then (
                 let contents =
                   List.mapi (fun index cell ->
