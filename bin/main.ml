@@ -1,32 +1,12 @@
 open Eio.Std
 open Event
 open Collaborative_editor__Types
-open Collaborative_editor__Buffer
-open Collaborative_editor__Configure
-open Collaborative_editor__Widget
 open Collaborative_editor__Renderer
-open Collaborative_editor__Textholder
-open Collaborative_editor__Frame
 
 let unpaused = ref (Promise.create_resolved ())
 
 let await_timeout timeout_mutex =
     Eio.Condition.await_no_mutex timeout_mutex
-
-module C = Make
-module A = Area
-module B = Buffer(A)
-module BF = BufferManipulator (C) (B)
-
-let create_buffer()  =
-  BF.make_buffer()
-
-module W = Widget
-
-let render() =
-    let _f = Renderer.get_frame() in     (* TODO *)
-    let text = Textholder.make "Text" in (* TODO *)
-    Frame.render_widget text (module W) (create_buffer())
 
 
 let run env =
@@ -44,7 +24,7 @@ let run env =
   (fun () ->
     let rec loop () =
       await_timeout cond;
-      render();
+      Renderer.render();
       flush stdout;
       Fiber.yield ();
       loop ()
@@ -52,7 +32,16 @@ let run env =
     loop ()
   )
 
+let enter_alt_screen () =
+  let fd = Unix.descr_of_out_channel stdout in
+  ignore (Unix.write_substring fd "\x1b[?1049h" 0 8)
+
+let leave_alt_screen () =
+  let fd = Unix.descr_of_out_channel stdout in
+  ignore (Unix.write_substring fd "\x1b[?1049l" 0 8)
+
 let change_mode ()=
+     enter_alt_screen ();
      let enable_raw_mode () =
        let stdin_fd = Unix.descr_of_in_channel stdin in
        let termios = Unix.tcgetattr stdin_fd in

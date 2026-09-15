@@ -47,9 +47,9 @@ end
             (* The y coordinate of the top left corner of the `Rect` *)
            y = 5;
             (* The width of the `Area` *)
-           width = 21;
+           width = 51;
             (* The height of the `Area` *)
-           height = 5
+           height = 51
        }
  let get_area()  = t
  let get_x()  = t.x
