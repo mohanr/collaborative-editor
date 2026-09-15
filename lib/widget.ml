@@ -129,6 +129,8 @@ let render_styled_border (area : Types.Area.t) =
    let render area ?( custom_formatter = Format.std_formatter) buf =
            print_string "\x1b[43;30mHello World!\x1b[0m";
 
-           let () = render_styled_border area in
-           let () = render_styled_text area in ()
+           let () = render_styled_border area   in
+           ()
+           (* let () = render_styled_text area in () *)
+
 end
