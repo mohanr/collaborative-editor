@@ -1,12 +1,33 @@
 open Eio.Std
 open Event
+open Collaborative_editor__Terminal.Terminal
 open Collaborative_editor__Types
 open Collaborative_editor__Renderer
+open Collaborative_editor__Event_stream.EventStream
 
 let unpaused = ref (Promise.create_resolved ())
 
 let await_timeout timeout_mutex =
     Eio.Condition.await_no_mutex timeout_mutex
+
+(* https://github.com/ocaml-community/lambda-term/blob/master/src/lTerm.ml *)
+
+let receive_event () =
+    let _stream = get_event_stream() in
+    let stdin_fd =get_in_channel () in
+    let open Stdlib in
+
+    let loop_while_event () =
+
+      try while true do
+        let key =   In_channel.input_line stdin_fd in
+          match key with
+          | Some s  ->  Printf.printf "%s" s;
+                        Renderer.render();
+          | None ->  ()
+      done with End_of_file -> ()
+    in
+    loop_while_event ()
 
 
 let run env =
@@ -24,7 +45,7 @@ let run env =
   (fun () ->
     let rec loop () =
       await_timeout cond;
-      Renderer.render();
+      receive_event ();
       flush stdout;
       Fiber.yield ();
       loop ()
@@ -32,16 +53,7 @@ let run env =
     loop ()
   )
 
-let enter_alt_screen () =
-  let fd = Unix.descr_of_out_channel stdout in
-  ignore (Unix.write_substring fd "\x1b[?1049h" 0 8)
-
-let leave_alt_screen () =
-  let fd = Unix.descr_of_out_channel stdout in
-  ignore (Unix.write_substring fd "\x1b[?1049l" 0 8)
-
 let change_mode ()=
-     enter_alt_screen ();
      let enable_raw_mode () =
        let stdin_fd = Unix.descr_of_in_channel stdin in
        let termios = Unix.tcgetattr stdin_fd in

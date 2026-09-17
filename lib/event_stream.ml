@@ -11,6 +11,9 @@ module EventStream = struct
 
   let stream = Eio.Stream.create 2 (* Configure *)
 
+  let get_event_stream() =
+    stream
+
   let handle_event() =
   Eio.Switch.run  @@ fun sw ->
        Fiber.fork ~sw
