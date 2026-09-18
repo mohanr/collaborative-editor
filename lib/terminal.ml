@@ -56,7 +56,9 @@ type terminal = {
 
 let ansi_escape_codes() = {
   text_cursor_enable = "\x1b[?25h";
-  reset_text_cursor_enable = "\x1b[?25l"
+  reset_text_cursor_enable = "\x1b[?25l";
+  set_window_title1 = "\x1b]2;";
+  set_window_title2 =  "\x07";
 }
 
 module Cursor = struct

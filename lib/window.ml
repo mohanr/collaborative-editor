@@ -1,4 +1,5 @@
 open Types
+open Terminal
 
 module Window = struct
 
@@ -22,8 +23,12 @@ let get_plain_style () = {
   vertical_right = "│";
   horizontal_top    = "─";
   horizontal_bottom = "─";
+  half_left =    "▌";
+  half_right=       "▐";
+
 }
 
+(* (set-fontset-font t '(#x2580 . #x259F) (face-attribute 'default :family)) *)
 
 let default_window_style() =
   let plain_style = get_plain_style() in
@@ -38,6 +43,9 @@ let default_window_style() =
      Border.add plain_style.horizontal_bottom
     in init_border_style
 
+let set_title title =
 
+  let code = Terminal.ansi_escape_codes() in
+  code.set_window_title1 ^ title  ^ code.set_window_title2
 
 end

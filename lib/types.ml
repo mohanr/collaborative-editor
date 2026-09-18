@@ -81,7 +81,10 @@ type plain = {
     vertical_left: string;
     vertical_right: string;
     horizontal_top: string;
-    horizontal_bottom: string
+    horizontal_bottom: string;
+	half_left:        string;
+	half_right:        string
+
 }
 
 type location = {
@@ -93,7 +96,9 @@ type location = {
 }
 type ansi_escape_codes = {
   text_cursor_enable: string;
-  reset_text_cursor_enable: string
+  reset_text_cursor_enable: string;
+  set_window_title1 : string;
+  set_window_title2 :  string;
 }
 type identity = {
   agent : string Base.Option.t; (* Containers inferferes *)
