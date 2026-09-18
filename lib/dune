@@ -5,7 +5,7 @@
  (name collaborative_editor)
  (preprocess (pps ppx_deriving.show ppx_compare ppx_sexp_conv))
  (libraries core eio_main containers re)
-(modules event_types event_stream consoletable layout_types layout_configurer_intf terminal
+(modules tuistate event_types event_stream consoletable layout_types layout_configurer_intf terminal
          types term_driver document consoletable crdt_intf
          configurer_intf buffer crdt crdt_intf configure window
          frame crdt textholder renderer widget )

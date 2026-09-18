@@ -23,7 +23,8 @@ let draw_hborder_in_buffer (border : style ) width bottom_or_top =
                     Buffer.add_string  buffer  plain_style.top_left
                    else
                     Buffer.add_string  buffer  plain_style.bottom_left;
-                    Buffer.add_string  buffer (repeat ~n:(width - 2)  s ) ;
+                    Buffer.add_string  buffer (repeat ~n:(width - 2)
+                                                  s ) ;
                    if bottom_or_top then
                     Buffer.add_string  buffer  plain_style.top_right
                    else
@@ -37,12 +38,22 @@ let draw_vborder_in_buffer border width =
   let draw b buffer =
     match b with
     | VeBorder s ->  let l = width in
-                    Buffer.add_string buffer s;
-                    Buffer.add_string buffer "\x1b[0;38;5;15;48;5;12m";
-                    Buffer.add_string  buffer (String.make (l - 2) ' ');
-                    Buffer.add_string buffer  "\x1b[0m";
-                    Buffer.add_string buffer s;
-                    buffer
+        Buffer.add_string buffer s;
+        (* Buffer.add_string buffer "\x1b[0;38;5;12m"; *)
+
+        (* Buffer.add_string buffer plain_style.half_right; *)
+        Buffer.add_string buffer "\x1b[0;38;5;15;48;5;12m";
+        Buffer.add_string  buffer (String.make (l - 2) ' ');
+        Buffer.add_string buffer  "\x1b[0m";
+        Buffer.add_string buffer "\x1b[48;5;12m";
+
+        (* Buffer.add_string buffer "\x1b[0;38;5;12m"; *)
+
+        (* Buffer.add_string buffer plain_style.half_left; *)
+
+        Buffer.add_string buffer "\x1b[0m";
+        Buffer.add_string buffer s;
+         buffer
     |  _-> buffer
   in
    try
@@ -92,6 +103,7 @@ let add buf s =
 (* https://pkg.go.dev/github.com/charmbracelet/x/ansi *)
 let render_styled_border (area : Types.Area.t) =
   let ansi_escape_codes = Terminal.ansi_escape_codes () in
+  Fmt.pr "%s" (Window.set_title "Editor");
   let buf = Buffer.create 256 in
   let new_location = ref { x =  0; y = 0} in
   add buf (Terminal.Cursor.set_cursor_position new_location);
@@ -115,7 +127,10 @@ let render_styled_border (area : Types.Area.t) =
   add buf "\x1b[?2026l";
   let out = Buffer.contents buf in
   let fd = Unix.descr_of_out_channel stdout in
-  ignore (Unix.write_substring fd out 0 (String.length out))
+  ignore (Unix.write_substring fd out 0 (String.length out));
+  let title = Window.set_title "Collaborative Editor" in
+  let fd = Unix.descr_of_out_channel stdout in
+  ignore (Unix.write_substring fd title 0 (String.length title ))
 
    let render_styled_text area =
      Format.pp_set_tags Format.std_formatter true;
@@ -127,7 +142,7 @@ let render_styled_border (area : Types.Area.t) =
 
 
    let render area ?( custom_formatter = Format.std_formatter) buf =
-           print_string "\x1b[43;30mHello World!\x1b[0m";
+           (* print_string "\x1b[43;30mHello World!\x1b[0m"; *)
 
            let () = render_styled_border area   in
            ()
