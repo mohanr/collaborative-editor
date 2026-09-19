@@ -76,6 +76,10 @@ module Cursor = struct
     let get_cursor_location () =
         !location
 
+    let reset_text_cursor_enable() =
+       let code = ansi_escape_codes() in
+       code.reset_text_cursor_enable
+
     let set_cursor_position location=
         location := !location;
         Printf.sprintf "\x1b[%d;%dH" !location.x !location.y;
