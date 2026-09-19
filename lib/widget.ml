@@ -103,7 +103,6 @@ let add buf s =
 (* https://pkg.go.dev/github.com/charmbracelet/x/ansi *)
 let render_styled_border (area : Types.Area.t) =
   let ansi_escape_codes = Terminal.ansi_escape_codes () in
-  Fmt.pr "%s" (Window.set_title "Editor");
   let buf = Buffer.create 256 in
   let new_location = ref { x =  0; y = 0} in
   add buf (Terminal.Cursor.set_cursor_position new_location);
