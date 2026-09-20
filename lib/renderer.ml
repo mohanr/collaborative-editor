@@ -28,6 +28,7 @@ let create_buffer()  =
 
 let render () =
     let _f = get_frame() in     (* TODO *)
-    let text = Textholder.make "Text" in (* TODO *)
-    render_widget text (module W) (create_buffer())
+    (* A textholder may be needed for text rendering widgets *)
+    (* like editors *)
+    render_widget (module W) (create_buffer())
 end

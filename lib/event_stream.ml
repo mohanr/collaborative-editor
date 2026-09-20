@@ -20,7 +20,6 @@ module EventStream = struct
          (fun () ->
               let event = Eio.Stream.take stream in
               traceln "Got %d" event ;
-              Renderer.render();
               Fiber.yield ()
          )
 end

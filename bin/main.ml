@@ -23,7 +23,6 @@ let receive_event () =
         let key =   In_channel.input_line stdin_fd in
           match key with
           | Some s  ->  Printf.printf "%s" s;
-                        Renderer.render();
           | None ->  ()
       done with End_of_file -> ()
     in
@@ -35,6 +34,7 @@ let run env =
    Eio.Switch.run @@ fun _ ->
    let cond = Eio.Condition.create () in
    let clock = Eio.Stdenv.clock env in
+   Renderer.render();           (* Event handlers for this is pending *)
    Fiber.both  (fun () ->
      while true do
         Promise.await !unpaused;

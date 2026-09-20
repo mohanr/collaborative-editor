@@ -16,4 +16,14 @@ module Make  = struct
 
   } in conf
 
+  let get_config w h=
+
+  let conf = {
+
+    width = w;
+    height = h;
+
+  } in conf
+
+
  end

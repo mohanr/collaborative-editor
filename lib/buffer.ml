@@ -23,7 +23,7 @@ let get_area() =
 
 module Make( Config : Configurer_intf.Configurer) = struct
   let new_buffer ()  =
-    let config= Config.set_size 10 10 in
+  let config = Config.set_size 49 49 in
     let area : Types.Area.t = { x = 0;y = 0;
                  width = config.width; height  = config.height } in
     {area = area; contents = Buffer.create 4096}

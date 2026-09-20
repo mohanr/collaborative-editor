@@ -6,6 +6,7 @@ open Window
 open Terminal
 
 (* https://hal.science/hal-01503081/file/format-unraveled.pdf *)
+(* Supposed to be the container widget within which other widgets render *)
 module type Widget = sig
     val render : Area.t  -> ?custom_formatter:Format.formatter -> Types.t -> unit
 end
