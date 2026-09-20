@@ -12,8 +12,15 @@ module type Holder = sig
    }
    type text = Text : 'text representation-> text
 
+type textholder  = {
 
-    val make : text -> text        (* No embellishments like style for now *)
+    data : text;                (*Existential  *)
+
+    scroll : location
+
+}
+
+    val make : string -> textholder       (* No embellishments like style for now *)
 end
 module Textholder = struct
 
@@ -37,7 +44,18 @@ type textholder  = {
 
 }
 
-    let make text = text       (* No embellishments like style for now *)
+    let make text =
+
+      let location =
+               {
+
+                x = 0;
+
+                y = 0
+
+               } in
+      {data =  text; scroll =
+                  location  }       (* No embellishments like style for now *)
 
     let scroll offset =
         {

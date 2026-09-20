@@ -12,7 +12,7 @@ module type Configurer=
 sig
 
   include module type of MakeConfigurer
-  val set_size : int -> int ->  config
+  val set_size :  int -> int -> config
 
 end
 

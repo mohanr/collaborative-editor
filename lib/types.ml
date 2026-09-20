@@ -8,7 +8,7 @@ type style =
   | HoBorder of string
   | Glyph of string
 
-(*  This is usually the rectangle*)
+
 module type Arena =
 
 sig
