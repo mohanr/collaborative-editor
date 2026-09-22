@@ -1,0 +1,7 @@
+
+(include_subdirs unqualified)
+(library
+
+ (name mergedoc)  ; This name is referenced in the main `dune` file
+ (modules merge service crdtclient)
+ (libraries collaborative_editor capnp capnp-rpc-unix capnp-rpc-lwt ))

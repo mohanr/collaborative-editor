@@ -8,6 +8,12 @@ module Crdt = struct
 
    exception Version_error of string
 
+   (* Local store before merging *)
+   let doc_content_store = ref
+                           {
+                           doc_content = [];
+                           version = VersionMap.empty;                   (* CCMap  *)
+                           }
    type _ eff += Failure : string -> item eff
 
    let get_safe_list_elt doc pos  =
@@ -146,6 +152,24 @@ module Crdt = struct
                doc.doc_content
        )
 
+   (* Local store before merging *)
+    let insert_local_store doc agent pos text =
+    let version =  check_version doc agent in
+    let item = {
+         content = text;
+         id = { agent = Some agent ; seq = Some version };
+         origin_left = get_left_or_right_elt doc  (pos - 2);
+         origin_right = get_left_or_right_elt doc (pos - 1);
+         deleted = false
+       } in
+    let updated_content = merge doc item in
+
+   let updated_version = VersionMap.add agent version doc.version  in
+     {
+       doc_content = updated_content;
+       version = updated_version
+     }
+
     let insert doc agent pos text =
     let version =  check_version doc agent in
     let item = {
@@ -158,11 +182,10 @@ module Crdt = struct
     let updated_content = merge doc item in
 
    let updated_version = VersionMap.add agent version doc.version  in
-
-  {
-    doc_content = updated_content;
-    version = updated_version
-  }
+      {
+        doc_content = updated_content;
+        version = updated_version
+      }
     end
 
 end
