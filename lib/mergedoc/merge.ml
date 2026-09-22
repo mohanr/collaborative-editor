@@ -22,8 +22,8 @@ module type S = sig
         type struct_t = [`Message_8eef0c28ea11163d]
         type t = struct_t reader_t
         type unnamed_union_t =
-          | Someagent
-          | Noneagent of string
+          | Someagent of string
+          | Noneagent
           | Undefined of int
         val get : t -> unnamed_union_t
         val of_message : 'cap message_t -> t
@@ -40,8 +40,8 @@ module type S = sig
         type struct_t = [`Message_8f90a95be910c25d]
         type t = struct_t reader_t
         type unnamed_union_t =
-          | Someseq
-          | Noneseq of int
+          | Someseq of int
+          | Noneseq
           | Undefined of int
         val get : t -> unnamed_union_t
         val of_message : 'cap message_t -> t
@@ -137,6 +137,14 @@ module type S = sig
         module Results : sig
           type struct_t = [`Mergedoc_addff87e5b612119]
           type t = struct_t reader_t
+          val has_itemlist : t -> bool
+          val itemlist_get : t -> (ro, Item.t, array_t) Capnp.Array.t
+          val itemlist_get_list : t -> Item.t list
+          val itemlist_get_array : t -> Item.t array
+          val has_doccontent : t -> bool
+          val doccontent_get : t -> (ro, VersionTuple.t, array_t) Capnp.Array.t
+          val doccontent_get_list : t -> VersionTuple.t list
+          val doccontent_get_array : t -> VersionTuple.t array
           val of_message : 'cap message_t -> t
           val of_builder : struct_t builder_t -> t
         end
@@ -155,12 +163,12 @@ module type S = sig
         type struct_t = [`Message_8eef0c28ea11163d]
         type t = struct_t builder_t
         type unnamed_union_t =
-          | Someagent
-          | Noneagent of string
+          | Someagent of string
+          | Noneagent
           | Undefined of int
         val get : t -> unnamed_union_t
-        val someagent_set : t -> unit
-        val noneagent_set : t -> string -> unit
+        val someagent_set : t -> string -> unit
+        val noneagent_set : t -> unit
         val of_message : rw message_t -> t
         val to_message : t -> rw message_t
         val to_reader : t -> struct_t reader_t
@@ -182,12 +190,12 @@ module type S = sig
         type struct_t = [`Message_8f90a95be910c25d]
         type t = struct_t builder_t
         type unnamed_union_t =
-          | Someseq
-          | Noneseq of int
+          | Someseq of int
+          | Noneseq
           | Undefined of int
         val get : t -> unnamed_union_t
-        val someseq_set : t -> unit
-        val noneseq_set_exn : t -> int -> unit
+        val someseq_set_exn : t -> int -> unit
+        val noneseq_set : t -> unit
         val of_message : rw message_t -> t
         val to_message : t -> rw message_t
         val to_reader : t -> struct_t reader_t
@@ -338,6 +346,22 @@ module type S = sig
         module Results : sig
           type struct_t = [`Mergedoc_addff87e5b612119]
           type t = struct_t builder_t
+          val has_itemlist : t -> bool
+          val itemlist_get : t -> (rw, Item.t, array_t) Capnp.Array.t
+          val itemlist_get_list : t -> Item.t list
+          val itemlist_get_array : t -> Item.t array
+          val itemlist_set : t -> (rw, Item.t, array_t) Capnp.Array.t -> (rw, Item.t, array_t) Capnp.Array.t
+          val itemlist_set_list : t -> Item.t list -> (rw, Item.t, array_t) Capnp.Array.t
+          val itemlist_set_array : t -> Item.t array -> (rw, Item.t, array_t) Capnp.Array.t
+          val itemlist_init : t -> int -> (rw, Item.t, array_t) Capnp.Array.t
+          val has_doccontent : t -> bool
+          val doccontent_get : t -> (rw, VersionTuple.t, array_t) Capnp.Array.t
+          val doccontent_get_list : t -> VersionTuple.t list
+          val doccontent_get_array : t -> VersionTuple.t array
+          val doccontent_set : t -> (rw, VersionTuple.t, array_t) Capnp.Array.t -> (rw, VersionTuple.t, array_t) Capnp.Array.t
+          val doccontent_set_list : t -> VersionTuple.t list -> (rw, VersionTuple.t, array_t) Capnp.Array.t
+          val doccontent_set_array : t -> VersionTuple.t array -> (rw, VersionTuple.t, array_t) Capnp.Array.t
+          val doccontent_init : t -> int -> (rw, VersionTuple.t, array_t) Capnp.Array.t
           val of_message : rw message_t -> t
           val to_message : t -> rw message_t
           val to_reader : t -> struct_t reader_t
@@ -389,19 +413,19 @@ module MakeRPC(MessageWrapper : Capnp.RPC.S) = struct
       module Message = struct
         type struct_t = [`Message_8eef0c28ea11163d]
         type t = struct_t reader_t
-        let someagent_get x = ()
-        let has_noneagent x =
+        let has_someagent x =
           RA_.has_field x 0
-        let noneagent_get x =
+        let someagent_get x =
           RA_.get_text ~default:"" x 0
+        let noneagent_get x = ()
         type unnamed_union_t =
-          | Someagent
-          | Noneagent of string
+          | Someagent of string
+          | Noneagent
           | Undefined of int
         let get x =
           match RA_.get_uint16 ~default:0 x 0 with
-          | 0 -> Someagent
-          | 1 -> Noneagent (noneagent_get x)
+          | 0 -> Someagent (someagent_get x)
+          | 1 -> Noneagent
           | v -> Undefined v
         let of_message x = RA_.get_root_struct (RA_.Message.readonly x)
         let of_builder x = Some (RA_.StructStorage.readonly x)
@@ -416,17 +440,17 @@ module MakeRPC(MessageWrapper : Capnp.RPC.S) = struct
       module Message = struct
         type struct_t = [`Message_8f90a95be910c25d]
         type t = struct_t reader_t
-        let someseq_get x = ()
-        let noneseq_get x =
-          RA_.get_int16 ~default:(0) x 2
+        let someseq_get x =
+          RA_.get_int16 ~default:(0) x 0
+        let noneseq_get x = ()
         type unnamed_union_t =
-          | Someseq
-          | Noneseq of int
+          | Someseq of int
+          | Noneseq
           | Undefined of int
         let get x =
-          match RA_.get_uint16 ~default:0 x 0 with
-          | 0 -> Someseq
-          | 1 -> Noneseq (noneseq_get x)
+          match RA_.get_uint16 ~default:0 x 2 with
+          | 0 -> Someseq (someseq_get x)
+          | 1 -> Noneseq
           | v -> Undefined v
         let of_message x = RA_.get_root_struct (RA_.Message.readonly x)
         let of_builder x = Some (RA_.StructStorage.readonly x)
@@ -564,6 +588,22 @@ module MakeRPC(MessageWrapper : Capnp.RPC.S) = struct
         module Results = struct
           type struct_t = [`Mergedoc_addff87e5b612119]
           type t = struct_t reader_t
+          let has_itemlist x =
+            RA_.has_field x 0
+          let itemlist_get x = 
+            RA_.get_struct_list x 0
+          let itemlist_get_list x =
+            Capnp.Array.to_list (itemlist_get x)
+          let itemlist_get_array x =
+            Capnp.Array.to_array (itemlist_get x)
+          let has_doccontent x =
+            RA_.has_field x 1
+          let doccontent_get x = 
+            RA_.get_struct_list x 1
+          let doccontent_get_list x =
+            Capnp.Array.to_list (doccontent_get x)
+          let doccontent_get_array x =
+            Capnp.Array.to_array (doccontent_get x)
           let of_message x = RA_.get_root_struct (RA_.Message.readonly x)
           let of_builder x = Some (RA_.StructStorage.readonly x)
         end
@@ -582,23 +622,23 @@ module MakeRPC(MessageWrapper : Capnp.RPC.S) = struct
       module Message = struct
         type struct_t = [`Message_8eef0c28ea11163d]
         type t = struct_t builder_t
-        let someagent_get x = ()
-        let someagent_set x =
-          BA_.set_void ~discr:{BA_.Discr.value=0; BA_.Discr.byte_ofs=0} x
-        let has_noneagent x =
+        let has_someagent x =
           BA_.has_field x 0
-        let noneagent_get x =
+        let someagent_get x =
           BA_.get_text ~default:"" x 0
-        let noneagent_set x v =
-          BA_.set_text ~discr:{BA_.Discr.value=1; BA_.Discr.byte_ofs=0} x 0 v
+        let someagent_set x v =
+          BA_.set_text ~discr:{BA_.Discr.value=0; BA_.Discr.byte_ofs=0} x 0 v
+        let noneagent_get x = ()
+        let noneagent_set x =
+          BA_.set_void ~discr:{BA_.Discr.value=1; BA_.Discr.byte_ofs=0} x
         type unnamed_union_t =
-          | Someagent
-          | Noneagent of string
+          | Someagent of string
+          | Noneagent
           | Undefined of int
         let get x =
           match BA_.get_uint16 ~default:0 x 0 with
-          | 0 -> Someagent
-          | 1 -> Noneagent (noneagent_get x)
+          | 0 -> Someagent (someagent_get x)
+          | 1 -> Noneagent
           | v -> Undefined v
         let of_message x = BA_.get_root_struct ~data_words:1 ~pointer_words:1 x
         let to_message x = x.BA_.NM.StructStorage.data.MessageWrapper.Slice.msg
@@ -639,21 +679,21 @@ module MakeRPC(MessageWrapper : Capnp.RPC.S) = struct
       module Message = struct
         type struct_t = [`Message_8f90a95be910c25d]
         type t = struct_t builder_t
-        let someseq_get x = ()
-        let someseq_set x =
-          BA_.set_void ~discr:{BA_.Discr.value=0; BA_.Discr.byte_ofs=0} x
-        let noneseq_get x =
-          BA_.get_int16 ~default:(0) x 2
-        let noneseq_set_exn x v =
-          BA_.set_int16 ~discr:{BA_.Discr.value=1; BA_.Discr.byte_ofs=0} ~default:(0) x 2 v
+        let someseq_get x =
+          BA_.get_int16 ~default:(0) x 0
+        let someseq_set_exn x v =
+          BA_.set_int16 ~discr:{BA_.Discr.value=0; BA_.Discr.byte_ofs=2} ~default:(0) x 0 v
+        let noneseq_get x = ()
+        let noneseq_set x =
+          BA_.set_void ~discr:{BA_.Discr.value=1; BA_.Discr.byte_ofs=2} x
         type unnamed_union_t =
-          | Someseq
-          | Noneseq of int
+          | Someseq of int
+          | Noneseq
           | Undefined of int
         let get x =
-          match BA_.get_uint16 ~default:0 x 0 with
-          | 0 -> Someseq
-          | 1 -> Noneseq (noneseq_get x)
+          match BA_.get_uint16 ~default:0 x 2 with
+          | 0 -> Someseq (someseq_get x)
+          | 1 -> Noneseq
           | v -> Undefined v
         let of_message x = BA_.get_root_struct ~data_words:1 ~pointer_words:0 x
         let to_message x = x.BA_.NM.StructStorage.data.MessageWrapper.Slice.msg
@@ -669,8 +709,8 @@ module MakeRPC(MessageWrapper : Capnp.RPC.S) = struct
         let pointers = x.BA_.NM.StructStorage.pointers in
         let () = ignore data in
         let () = ignore pointers in
-        let () = BA_.set_int16 ~default:0 x 0 0 in
         let () = BA_.set_int16 ~default:0 x 2 0 in
+        let () = BA_.set_int16 ~default:0 x 0 0 in
         BA_.cast_struct x
       let of_message x = BA_.get_root_struct ~data_words:1 ~pointer_words:0 x
       let to_message x = x.BA_.NM.StructStorage.data.MessageWrapper.Slice.msg
@@ -922,13 +962,53 @@ module MakeRPC(MessageWrapper : Capnp.RPC.S) = struct
         module Results = struct
           type struct_t = [`Mergedoc_addff87e5b612119]
           type t = struct_t builder_t
-          let of_message x = BA_.get_root_struct ~data_words:0 ~pointer_words:0 x
+          let has_itemlist x =
+            BA_.has_field x 0
+          let itemlist_get x = 
+            BA_.get_struct_list ~data_words:1 ~pointer_words:4 x 0
+          let itemlist_get_list x =
+            Capnp.Array.to_list (itemlist_get x)
+          let itemlist_get_array x =
+            Capnp.Array.to_array (itemlist_get x)
+          let itemlist_set x v =
+            BA_.set_struct_list ~data_words:1 ~pointer_words:4 x 0 v
+          let itemlist_init x n =
+            BA_.init_struct_list ~data_words:1 ~pointer_words:4 x 0 n
+          let itemlist_set_list x v =
+            let builder = itemlist_init x (List.length v) in
+            let () = List.iteri (fun i a -> Capnp.Array.set builder i a) v in
+            builder
+          let itemlist_set_array x v =
+            let builder = itemlist_init x (Array.length v) in
+            let () = Array.iteri (fun i a -> Capnp.Array.set builder i a) v in
+            builder
+          let has_doccontent x =
+            BA_.has_field x 1
+          let doccontent_get x = 
+            BA_.get_struct_list ~data_words:1 ~pointer_words:1 x 1
+          let doccontent_get_list x =
+            Capnp.Array.to_list (doccontent_get x)
+          let doccontent_get_array x =
+            Capnp.Array.to_array (doccontent_get x)
+          let doccontent_set x v =
+            BA_.set_struct_list ~data_words:1 ~pointer_words:1 x 1 v
+          let doccontent_init x n =
+            BA_.init_struct_list ~data_words:1 ~pointer_words:1 x 1 n
+          let doccontent_set_list x v =
+            let builder = doccontent_init x (List.length v) in
+            let () = List.iteri (fun i a -> Capnp.Array.set builder i a) v in
+            builder
+          let doccontent_set_array x v =
+            let builder = doccontent_init x (Array.length v) in
+            let () = Array.iteri (fun i a -> Capnp.Array.set builder i a) v in
+            builder
+          let of_message x = BA_.get_root_struct ~data_words:0 ~pointer_words:2 x
           let to_message x = x.BA_.NM.StructStorage.data.MessageWrapper.Slice.msg
           let to_reader x = Some (RA_.StructStorage.readonly x)
           let init_root ?message_size () =
-            BA_.alloc_root_struct ?message_size ~data_words:0 ~pointer_words:0 ()
+            BA_.alloc_root_struct ?message_size ~data_words:0 ~pointer_words:2 ()
           let init_pointer ptr =
-            BA_.init_struct_pointer ptr ~data_words:0 ~pointer_words:0
+            BA_.init_struct_pointer ptr ~data_words:0 ~pointer_words:2
         end
       end
     end

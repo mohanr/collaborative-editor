@@ -135,6 +135,7 @@ module type CRDTOperator = sig
     val merge : doc -> item -> item list
     val make : unit -> doc
     val insert : doc -> string -> int ->string -> doc
+    val doc_content_store : doc ref
   end
 end
 

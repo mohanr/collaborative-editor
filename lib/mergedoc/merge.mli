@@ -22,8 +22,8 @@ module type S = sig
         type struct_t = [`Message_8eef0c28ea11163d]
         type t = struct_t reader_t
         type unnamed_union_t =
-          | Someagent
-          | Noneagent of string
+          | Someagent of string
+          | Noneagent
           | Undefined of int
         val get : t -> unnamed_union_t
         val of_message : 'cap message_t -> t
@@ -40,8 +40,8 @@ module type S = sig
         type struct_t = [`Message_8f90a95be910c25d]
         type t = struct_t reader_t
         type unnamed_union_t =
-          | Someseq
-          | Noneseq of int
+          | Someseq of int
+          | Noneseq
           | Undefined of int
         val get : t -> unnamed_union_t
         val of_message : 'cap message_t -> t
@@ -137,6 +137,14 @@ module type S = sig
         module Results : sig
           type struct_t = [`Mergedoc_addff87e5b612119]
           type t = struct_t reader_t
+          val has_itemlist : t -> bool
+          val itemlist_get : t -> (ro, Item.t, array_t) Capnp.Array.t
+          val itemlist_get_list : t -> Item.t list
+          val itemlist_get_array : t -> Item.t array
+          val has_doccontent : t -> bool
+          val doccontent_get : t -> (ro, VersionTuple.t, array_t) Capnp.Array.t
+          val doccontent_get_list : t -> VersionTuple.t list
+          val doccontent_get_array : t -> VersionTuple.t array
           val of_message : 'cap message_t -> t
           val of_builder : struct_t builder_t -> t
         end
@@ -155,12 +163,12 @@ module type S = sig
         type struct_t = [`Message_8eef0c28ea11163d]
         type t = struct_t builder_t
         type unnamed_union_t =
-          | Someagent
-          | Noneagent of string
+          | Someagent of string
+          | Noneagent
           | Undefined of int
         val get : t -> unnamed_union_t
-        val someagent_set : t -> unit
-        val noneagent_set : t -> string -> unit
+        val someagent_set : t -> string -> unit
+        val noneagent_set : t -> unit
         val of_message : rw message_t -> t
         val to_message : t -> rw message_t
         val to_reader : t -> struct_t reader_t
@@ -182,12 +190,12 @@ module type S = sig
         type struct_t = [`Message_8f90a95be910c25d]
         type t = struct_t builder_t
         type unnamed_union_t =
-          | Someseq
-          | Noneseq of int
+          | Someseq of int
+          | Noneseq
           | Undefined of int
         val get : t -> unnamed_union_t
-        val someseq_set : t -> unit
-        val noneseq_set_exn : t -> int -> unit
+        val someseq_set_exn : t -> int -> unit
+        val noneseq_set : t -> unit
         val of_message : rw message_t -> t
         val to_message : t -> rw message_t
         val to_reader : t -> struct_t reader_t
@@ -338,6 +346,22 @@ module type S = sig
         module Results : sig
           type struct_t = [`Mergedoc_addff87e5b612119]
           type t = struct_t builder_t
+          val has_itemlist : t -> bool
+          val itemlist_get : t -> (rw, Item.t, array_t) Capnp.Array.t
+          val itemlist_get_list : t -> Item.t list
+          val itemlist_get_array : t -> Item.t array
+          val itemlist_set : t -> (rw, Item.t, array_t) Capnp.Array.t -> (rw, Item.t, array_t) Capnp.Array.t
+          val itemlist_set_list : t -> Item.t list -> (rw, Item.t, array_t) Capnp.Array.t
+          val itemlist_set_array : t -> Item.t array -> (rw, Item.t, array_t) Capnp.Array.t
+          val itemlist_init : t -> int -> (rw, Item.t, array_t) Capnp.Array.t
+          val has_doccontent : t -> bool
+          val doccontent_get : t -> (rw, VersionTuple.t, array_t) Capnp.Array.t
+          val doccontent_get_list : t -> VersionTuple.t list
+          val doccontent_get_array : t -> VersionTuple.t array
+          val doccontent_set : t -> (rw, VersionTuple.t, array_t) Capnp.Array.t -> (rw, VersionTuple.t, array_t) Capnp.Array.t
+          val doccontent_set_list : t -> VersionTuple.t list -> (rw, VersionTuple.t, array_t) Capnp.Array.t
+          val doccontent_set_array : t -> VersionTuple.t array -> (rw, VersionTuple.t, array_t) Capnp.Array.t
+          val doccontent_init : t -> int -> (rw, VersionTuple.t, array_t) Capnp.Array.t
           val of_message : rw message_t -> t
           val to_message : t -> rw message_t
           val to_reader : t -> struct_t reader_t

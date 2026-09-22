@@ -6,8 +6,6 @@ module Document = struct
 
 type _ Effect.t += Effect_merger_error:  doc -> doc Effect.t
 
-type item_array =
-    (item Option.t) CCArray.t
   (* Parameters are 'identity' and VersionMap *)
 let check_version1 id version =
    let agent = get_agent id in
@@ -39,6 +37,7 @@ let check_veracity_of_insertion item doc_content =
 let increment agent seq l1  =
 let current_max = VersionMap.find_opt agent l1.version |> Option.value ~default:(-1) in
   VersionMap.add agent (max current_max seq) l1.version
+
 
 let merge_both  src_content dest_content =
 
@@ -104,4 +103,6 @@ let merge_both  src_content dest_content =
         | iteml -> iteml;
        )
 
+let remote_merge_both  src_content =
+      merge_both  src_content !CRDTOp.Crdt_buffer.doc_content_store
 end
