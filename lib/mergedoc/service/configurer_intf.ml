@@ -1,4 +1,4 @@
-open Types
+open Service_types
 
 module MakeConfigurer = struct
 
@@ -6,8 +6,6 @@ module MakeConfigurer = struct
 type  config = {
 
 	other_nodes : string EntryMap.t;
-
-	state : cmstate ;
 
  env : Eio_unix.Stdenv.base
 
