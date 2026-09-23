@@ -1,6 +1,10 @@
 open Eio.Std
-open Snowflake
+open Collaborative_editor__Snowflake
 open Service_types
+open Collaborative_editor__Crdt
+open Configurer_intf
+open Tuiservice
+open Tuioperator
 
 (* Adapted from my Raft multi-node code *)
 type single_node = {
@@ -8,7 +12,7 @@ type single_node = {
 	server_cap_files : string list;
 }
 [@@deriving_show]
-let create_config_node env no  : (module Configurer_intf.Node)=
+let create_config_node env no  : (module Node)=
 
 let node = create_snowflake_node (Int64.of_int 0) in
  let cap_id_map =
@@ -45,10 +49,9 @@ let  new_cluster no_of_nodes env sw=
       let path = ( "/Users/anu/Documents/rays/collaborative-editor/service" ^ ( Int.to_string i) ^ ".cap") in
 
       Printf.printf "Generating snowflake Id";
-      in
-      let module Raftservice = RaftService.Make (X) in
+      let module TuiService = TuiService.Make(TUIOp) in
       Fiber.fork_daemon ~sw ( fun () ->
-          ignore(Raftservice.start_server  env#net env  (List.nth la i) path
+          ignore(TuiService.start_server  env#net env  (List.nth la i) path
                    (match (reverse path Config_Node.cap_id_map ) with
                     | Some k -> k
                     |None -> failwith "Wrong snowflake Id"));
@@ -71,9 +74,9 @@ let  new_cluster no_of_nodes env sw=
 
 let run_client _env service =
   let open Lwt.Syntax in
-  let open Client in
+  let open Crdtclient.Client in
   (* TODO LET* *)
-  let () = mergedoc service in
+  let _ = mergedoc service in
   Printf.printf "Client invoked RPC\n%!" ;
 
   Lwt.return_unit
@@ -88,7 +91,7 @@ let boot_server() =
   Eio_main.run @@ fun env ->
   Lwt_eio.with_event_loop ~clock:(Eio.Stdenv.clock env) @@ fun () ->
   Eio.Switch.run (fun sw ->
-
+  (* Waiting here to allow the server to start properly *)
   let new_cluster = new_cluster 1 env sw in
   let t = Timedesc.Span.make  ~s:95L () in
   Eio.Time.sleep (Eio.Stdenv.clock env) (Timedesc.Span.to_float_s t) ;
@@ -104,3 +107,4 @@ let boot_server() =
   in
   loop_while 0;
   (* Eio.Switch.fail sw (Failure "Normal test cancellation"); *)
+  )

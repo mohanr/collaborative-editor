@@ -3,5 +3,5 @@
 (library
 
  (name mergedoc)  ; This name is referenced in the main `dune` file
- (modules merge service crdtclient service_types)
+ (modules configurer_intf crdtclient server tuihandler_intf tuioperator tuiservice merge service crdtclient service_types)
  (libraries collaborative_editor capnp capnp-rpc-unix capnp-rpc-lwt ))
