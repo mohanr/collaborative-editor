@@ -5,6 +5,7 @@ open Collaborative_editor__Crdt
 open Configurer_intf
 open Tuiservice
 open Tuioperator
+open Collaborative_editor__Logger.Logger
 
 (* Adapted from my Raft multi-node code *)
 type single_node = {
@@ -12,6 +13,9 @@ type single_node = {
 	server_cap_files : string list;
 }
 [@@deriving_show]
+
+let snowflake_id = ref 0
+
 let create_config_node env no  : (module Node)=
 
 let node = create_snowflake_node (Int64.of_int 0) in
@@ -22,7 +26,8 @@ let node = create_snowflake_node (Int64.of_int 0) in
                    ^ ( Int.to_string i) ^ ".cap") in
         let id = generate node in
         let map = EntryMap.add
-         (match id with | Ok v ->  Int64.to_int v;
+         (match id with | Ok v ->  snowflake_id := Int64.to_int v;
+                                   Int64.to_int v;
                         | Error _ -> failwith
                                          "Unable to get snowflake id")
         path map in
@@ -46,7 +51,7 @@ let  new_cluster no_of_nodes env sw=
    let rec loop_while la p i =
 
     if i < no_of_nodes then(
-      let path = ( "/Users/anu/Documents/rays/collaborative-editor/service" ^ ( Int.to_string i) ^ ".cap") in
+      let path = ( "/Users/anu/Documents/rays/collaborative-editor/lib/mergedoc/service/" ^ ( Int.to_string i) ^ ".cap") in
 
       Printf.printf "Generating snowflake Id";
       let module TuiService = TuiService.Make(TUIOp) in
@@ -88,9 +93,13 @@ let connect net env uri sw =
   Capnp_rpc_unix.with_cap_exn sr (fun cap -> Lwt_eio.run_lwt ( fun () -> run_client env cap))
 
 let boot_server() =
+  Logs.set_reporter (lwt_reporter
+                       ("/Users/anu/Documents/rays/collaborative-editor/" ^
+                        ( Int.to_string !snowflake_id ) ^ ".log"));
   Eio_main.run @@ fun env ->
   Lwt_eio.with_event_loop ~clock:(Eio.Stdenv.clock env) @@ fun () ->
   Eio.Switch.run (fun sw ->
+  Logs.set_level (Some Debug);
   (* Waiting here to allow the server to start properly *)
   let new_cluster = new_cluster 1 env sw in
   let t = Timedesc.Span.make  ~s:95L () in
