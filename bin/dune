@@ -1,4 +1,4 @@
 (executable
  (public_name collaborative-editor)
  (name main)
- (libraries collaborative_editor))
+ (libraries collaborative_editor mergedoc))
