@@ -1,20 +1,18 @@
 open Buffer
-open Widget
 open Types
+open Tui_types
 
-
+(* Frame is not properly used now *)
 module Frame = struct
-  (*  Viewport etc.*)
-type frame = {
-    cursor_position: location Option.t;
-
-    viewport_area:Area.t;
-
-}
 let default_area ()= Area.get_area()
 
-let render_widget (widget : (module Widget)) ?(area=default_area()) buffer =
-        let module W = ( val widget : Widget) in
-        W.render area buffer
+  let get_frame() =
+    (* Create frame  *)
+    {
+      cursor_position = Some ({x = 0; y = 0});
+
+      viewport_area = Area.get_area()
+    }
+
 
 end

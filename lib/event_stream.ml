@@ -1,7 +1,6 @@
 open Eio.Std
-open Renderer
 
-open Event_types
+open Tui_types
 
 module type STREAMER = sig
     val get_event_stream : unit -> key Eio.Stream.t

@@ -99,6 +99,7 @@ type ansi_escape_codes = {
   reset_text_cursor_enable: string;
   set_window_title1 : string;
   set_window_title2 :  string;
+  text_cursor_enable_blinking : string;
 }
 type identity = {
   agent : string Base.Option.t; (* Containers inferferes *)

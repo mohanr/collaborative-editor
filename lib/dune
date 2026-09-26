@@ -5,8 +5,8 @@
  (name collaborative_editor)
  (preprocess (pps ppx_deriving.show ppx_compare ppx_sexp_conv))
  (libraries logs logs.fmt logs.lwt timedesc capnp-rpc-unix capnp-rpc-lwt lwt_eio core eio_main containers re)
-(modules logger snowflake shared_local_doc editorstate event_types event_stream consoletable layout_types layout_configurer_intf terminal
+(modules tui_types logger snowflake shared_local_doc editorstate event_stream consoletable layout_types layout_configurer_intf terminal
          types term_driver document consoletable crdt_intf
          configurer_intf buffer crdt crdt_intf configure window
-         frame crdt textholder renderer widget )
+         frame crdt textholder widget )
 )

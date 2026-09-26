@@ -2,8 +2,9 @@ open Eio.Std
 open Event
 open Collaborative_editor__Terminal.Terminal
 open Collaborative_editor__Types
-open Collaborative_editor__Renderer
+open Collaborative_editor__Widget
 open Collaborative_editor__Event_stream.EventStream
+open Collaborative_editor__Logger.Logger
 
 module type TUIHandler = sig
   val periodic_timer : Eio_unix.Stdenv.base -> unit
@@ -37,6 +38,7 @@ let receive_event () =
 
 let run env =
 
+   let _ = log_m "periodic timer " in
    Eio.Switch.run @@ fun _ ->
    let cond = Eio.Condition.create () in
    let clock = Eio.Stdenv.clock env in
