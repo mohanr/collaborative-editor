@@ -27,7 +27,11 @@ let node = create_snowflake_node (Int64.of_int 0) in
         let id = generate node in
         let map = EntryMap.add
          (match id with | Ok v ->  snowflake_id := Int64.to_int v;
-                                   Int64.to_int v;
+           (* Snowflake ID is part of the log file name *)
+                     Logs.set_reporter (lwt_reporter
+                       ("/Users/anu/Documents/rays/collaborative-editor/" ^
+                        ( Int.to_string !snowflake_id ) ^ ".log"));
+                     Int64.to_int v;
                         | Error _ -> failwith
                                          "Unable to get snowflake id")
         path map in
@@ -93,9 +97,6 @@ let connect net env uri sw =
   Capnp_rpc_unix.with_cap_exn sr (fun cap -> Lwt_eio.run_lwt ( fun () -> run_client env cap))
 
 let boot_server() =
-  Logs.set_reporter (lwt_reporter
-                       ("/Users/anu/Documents/rays/collaborative-editor/" ^
-                        ( Int.to_string !snowflake_id ) ^ ".log"));
   Eio_main.run @@ fun env ->
   Lwt_eio.with_event_loop ~clock:(Eio.Stdenv.clock env) @@ fun () ->
   Eio.Switch.run (fun sw ->

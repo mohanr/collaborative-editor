@@ -1,19 +1,43 @@
 open Types
 open Buffer
 open Format
-open Stdlib
 open Window
 open Terminal
+open Configure
+open Tui_types
 
+module  W  =Widget
+module C = Make
+module A = Area
+module B = Buffer(A)
+module BF = BufferManipulator (C) (B)
+
+
+
+module Renderable = struct
+  type widget_type = Editor     (* | Other widget types *)
+  module type R = sig
+    val widget_type : widget_type
+   val render : Area.t  -> ?custom_formatter:Format.formatter ->
+                                        t -> unit
+  end
+end
+
+module EditorView : Renderable.R = struct
+  let widget_type  = Renderable.Editor
+  let render area ?( custom_formatter = Format.std_formatter) buf =
+    ()
+end
 (* https://hal.science/hal-01503081/file/format-unraveled.pdf *)
 (* Supposed to be the container widget within which other widgets render *)
 module type Widget = sig
-    val render : Area.t  -> ?custom_formatter:Format.formatter -> Types.t -> unit
+    val render : Area.t  -> ?custom_formatter:Format.formatter -> t -> unit
 end
 
 let plain_style = Window.get_plain_style ()
 
 let draw_hborder_in_buffer (border : style ) width bottom_or_top =
+  let open Stdlib in
   let rec repeat ?(n = 0) s =
       if n = 0 then "" else s ^ repeat s ~n:(n - 1)
   in
@@ -36,6 +60,7 @@ let draw_hborder_in_buffer (border : style ) width bottom_or_top =
      draw border (Buffer.create (width + 2))
 
 let draw_vborder_in_buffer border width =
+  let open Stdlib in
   let draw b buffer =
     match b with
     | VeBorder s ->  let l = width in
@@ -67,12 +92,13 @@ let draw_vborder_in_buffer border width =
 
 
 (* https://ocaml.org/manual/5.0/api/Format_tutorial.html#1_Refinementonhovboxes *)
-module Widget = struct
+module Widget( EditorView : Renderable.R ) = struct
    type Format.stag += Highlight
 
    let tui_stag_functions (area : Types.Area.t) = {
      Format.mark_open_stag = (fun stag ->
        let plain_style = Window.get_plain_style() in (*  Default *)
+       let open Stdlib in
        match stag with
        | Format.String_tag s ->
                 (match s with
@@ -99,12 +125,13 @@ module Widget = struct
    let pp_linebreak ppf () = Format.pp_print_break ppf Format.pp_infinity 0
 
 let add buf s =
+  let open Stdlib in
   Buffer.add_string buf s
 
 (* https://pkg.go.dev/github.com/charmbracelet/x/ansi *)
-let render_styled_border (area : Types.Area.t) =
+let render_styled_border (area : Types.Area.t) buf =
+  let open Stdlib in
   let ansi_escape_codes = Terminal.ansi_escape_codes () in
-  let buf = Buffer.create 256 in
   let new_location = ref { x =  0; y = 0} in
   add buf (Terminal.Cursor.set_cursor_position new_location);
   add buf "\x1b[?2026h";
@@ -142,10 +169,37 @@ let render_styled_border (area : Types.Area.t) =
 
 
    let render area ?( custom_formatter = Format.std_formatter) buf =
-           (* print_string "\x1b[43;30mHello World!\x1b[0m"; *)
 
-           let () = render_styled_border area   in
+       let l = [ (module EditorView : Renderable.R) ]
+       in
+       let create_buffer()  =
+         BF.make_buffer()
+       in
+       let _render_view widget =
+         let b = create_buffer() in
+         List.iter( fun v -> let module W = ( val v : Renderable.R ) in
+           W.render
+             (match b with
+                | {area = a; contents = buf} ->
+                    a ) b ) l
+           in
+           (* print_string "\x1b[43;30mHello World!\x1b[0m"; *)
+           let () = render_styled_border area buf  in
            ()
            (* let () = render_styled_text area in () *)
 
+end
+
+ module E = EditorView
+ module Wid = Widget(E)
+module Renderer = struct
+
+let create_buffer()  =
+  BF.make_buffer()
+
+
+let render() =
+   match  create_buffer() with
+   | {area = a; contents = buf} ->
+    Wid.render a buf
 end

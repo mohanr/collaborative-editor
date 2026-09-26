@@ -1,6 +1,7 @@
 open Capnp_rpc_lwt
 open Lwt.Infix
 open Collaborative_editor.Types
+open Collaborative_editor__Logger.Logger
 
 module MergeApi = Merge.MakeRPC(Capnp_rpc_lwt)
 
@@ -12,6 +13,7 @@ let merge_local =
     inherit Merge.service
 
     method mergedoc_impl params release_param_caps =
+      let _ = log_m "Merge document RPC implementation" in
       release_param_caps ();
       let open MergeApi.Reader in
       let open MergeApi.Reader.MergeDoc.Mergedoc in

@@ -1,6 +1,7 @@
 open Types
 open Eio.Std
 open Effect.Deep
+open Logger.Logger
 (* https://xavierleroy.org/CdF/2023-2024/5.pdf *)
 module Crdt = struct
 
@@ -164,6 +165,10 @@ module Crdt = struct
        } in
     let updated_content = merge doc item in
 
+   let c =
+        List.map (fun item -> item.content) updated_content
+        |> String.concat " " in
+   let _ =  log_message (fun args -> args c) pp_log in
    let updated_version = VersionMap.add agent version doc.version  in
      {
        doc_content = updated_content;

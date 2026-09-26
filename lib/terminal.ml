@@ -12,6 +12,7 @@ module type terminal_operations  = sig
   module Cursor : sig
     val hide_cursor  : unit -> string
     val set_cursor_position : location ref -> string
+    val set_cursor_blinking : unit -> string
   end
 end
 
@@ -59,29 +60,34 @@ let ansi_escape_codes() = {
   reset_text_cursor_enable = "\x1b[?25l";
   set_window_title1 = "\x1b]2;";
   set_window_title2 =  "\x07";
+  text_cursor_enable_blinking = "\x1b[?12h"
 }
+(* https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences *)
 
 module Cursor = struct
 
     let location = ref {x = 0 ; y = 0 }
 
+    let code = ansi_escape_codes()
+
     let hide_cursor ()=
-       let code = ansi_escape_codes() in
        code.reset_text_cursor_enable
 
     let show_cursor ()=
-       let code = ansi_escape_codes() in
        code.text_cursor_enable
 
     let get_cursor_location () =
         !location
 
     let reset_text_cursor_enable() =
-       let code = ansi_escape_codes() in
        code.reset_text_cursor_enable
 
     let set_cursor_position location=
         location := !location;
-        Printf.sprintf "\x1b[%d;%dH" !location.x !location.y;
+        Printf.sprintf  "\x1b[%d;%dH" !location.x !location.y
+
+    let set_cursor_blinking() =
+          code.text_cursor_enable_blinking
+
 end
 end

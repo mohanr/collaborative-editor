@@ -16,7 +16,7 @@ module Buffer ( Area :  Types.Arena )
   :BUFFERMAKER with  type t=Types.t
                                    = struct
 
-type t = Types.t
+type t=Types.t
 
 let get_area() =
   (module Area:Arena)
@@ -24,7 +24,7 @@ let get_area() =
 module Make( Config : Configurer_intf.Configurer) = struct
   let new_buffer ()  =
   let config = Config.set_size 49 49 in
-    let area : Types.Area.t = { x = 0;y = 0;
+    let area : Types.Area.t = { x = 0;y = 0; (* TODO User Container area effectively *)
                  width = config.width; height  = config.height } in
     {area = area; contents = Buffer.create 4096}
 
