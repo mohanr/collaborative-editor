@@ -282,9 +282,9 @@ let render (area : Area.t) ?( custom_formatter = Format.std_formatter) (buf : t)
        Buffer.add_buffer b (draw_hborder_in_buffer
                                (HoBorder plain_style.horizontal_bottom) area.width false);
 
-           let _ = log_m
-             "V: value=%S\n%!"
-             (Buffer.contents b) in
+           (* let _ = log_m *)
+           (*   "V: value=%S\n%!" *)
+           (*   (Buffer.contents b) in *)
        b
 
 end
