@@ -1,6 +1,5 @@
 open Types
 open Buffer
-open Tui_types
 open Logger.Logger
 open Configure
 open Window
@@ -15,11 +14,6 @@ module Renderable = struct
   end
 end
 
-module  W  =Widget
-module C = Make
-module A = Area
-module B = Buffer(A)
-module BF = BufferManipulator (C) (B)
 module EditorView : Renderable.R = struct
 
 let plain_style = Window.get_plain_style ()

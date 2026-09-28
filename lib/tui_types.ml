@@ -1,4 +1,6 @@
 open Types
+open Configure
+open Buffer
 
 type key = [ | `ASCII of char ]
 
@@ -9,3 +11,9 @@ type frame = {
     viewport_area:Area.t;
 
 }
+
+module  W  =Widget
+module C = Make
+module A = Area
+module B = Buffer(A)
+module BF = BufferManipulator (C) (B)
