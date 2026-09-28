@@ -1,6 +1,7 @@
 open Term_driver
 open Buffer
 open Types
+open Logger.Logger
 
 
 module type terminal_operations  = sig
@@ -22,20 +23,20 @@ module Terminal                 (* consider adding a state monad *)
 let get_out_channel() =
    let stdout_fd  = Unix.descr_of_out_channel stdout in
    if Unix.isatty Unix.stdin then
-     let () = prerr_endline "Warning: getting stdin, which is a tty." in
+     let _ = log_m "Warning: getting stdin, which is a tty." in
      stdout_fd
    else
-     let () = prerr_endline "Error: getting stdin, which is a tty." in
+     let _ = log_m  "Error: getting stdin, which is a tty." in
      failwith "Error: getting stdin, which is a tty."
 
 let get_in_channel() =
    (* let stdin_fd = Unix.descr_of_in_channel stdin in *)
 
    if Unix.isatty Unix.stdin then
-     let () = prerr_endline "Warning: getting stdin, which is a tty." in
+     let _ = log_m  "Warning: getting stdin, which is a tty." in
      stdin
    else
-     let () = prerr_endline "Error: getting stdin, which is a tty." in
+     let _ = log_m  "Error: getting stdin, which is a tty." in
      failwith "Error: getting stdin, which is a tty."
 
 let enter_alt_screen () =

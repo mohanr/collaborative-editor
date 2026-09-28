@@ -25,6 +25,10 @@ let get_plain_style () = {
   horizontal_bottom = "─";
   half_left =    "▌";
   half_right=       "▐";
+  top_left_ascii     =  "|";
+  top_right_ascii     =  "|";
+  bottom_left_ascii   =    "|";
+  bottom_right_ascii  =     "|";
 
 }
 

@@ -110,6 +110,9 @@ let stamp  = Logs.Tag.(empty |> add raft_tag "\nRAFT")
 let log_m message  =
   Logs_lwt.app(fun m -> m ~tags:(stamp)  message)
 
+let log_m fmt =
+  Format.kasprintf (fun s -> Logs_lwt.app (fun m -> m ~tags:stamp "%s" s)) fmt
+
 let pp_log1 out t  =
   Format.fprintf out "\n becomes Follower with term %ld " t
 
