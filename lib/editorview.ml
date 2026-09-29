@@ -1,7 +1,7 @@
 open Types
 open Buffer
 open Logger.Logger
-open Configure
+open Configurer
 open Window
 open Terminal
 

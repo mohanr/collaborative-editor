@@ -1,10 +1,12 @@
 open Eio.Std
 open Event
-open Collaborative_editor__Terminal.Terminal
-open Collaborative_editor__Types
-open Collaborative_editor__Widget
-open Collaborative_editor__Event_stream.EventStream
-open Collaborative_editor__Logger.Logger
+open Terminal.Terminal
+open Types
+open Widget
+open Event_stream
+open Logger.Logger
+open Editorstate
+open Editorcontext
 
 module type TUIHandler = sig
   val periodic_timer : Eio_unix.Stdenv.base -> unit
@@ -20,7 +22,7 @@ let await_timeout timeout_mutex =
 (* https://github.com/ocaml-community/lambda-term/blob/master/src/lTerm.ml *)
 
 let receive_event () =
-    let _stream = get_event_stream() in
+    let _stream = EventStream.get_event_stream() in
     let stdin_fd =get_in_channel () in
     let open Stdlib in
 
@@ -42,7 +44,7 @@ let run env =
    Eio.Switch.run @@ fun _ ->
    let cond = Eio.Condition.create () in
    let clock = Eio.Stdenv.clock env in
-   Renderer.render();           (* Event handlers for this is pending *)
+   Renderer.render();           (* Eve nt handlers for this is pending *)
    Fiber.both  (fun () ->
      while true do
         Promise.await !unpaused;

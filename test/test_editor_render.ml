@@ -19,9 +19,10 @@ let create_config_node () : (module Configurer)=
 
 let%expect_test "Render text in editor"=
 let open Collaborative_editor__Textholder in
+let open Collaborative_editor__Editorstate.EditorState in
+let open Collaborative_editor__Tui_types in
 let config = create_config_node () in
 let module C = (val config : Configurer) in
-let _config = C.set_size 0 5 in
 
    let string_text =
      Textholder.Text {
@@ -31,11 +32,11 @@ let _config = C.set_size 0 5 in
     in
     let run state =
         let a, state = EditorState.make string_text state in
-        let b, state = EditorState.change_cursor_position a state 0 5 in
+        let b, state = change_cursor_position a state 0 5 in
         (b, state)  in
       let init_state =
       {
-          EditorState.cursor_position = Some{ x = 1;y = 1 };
+          cursor_position = Some{ x = 1;y = 1 };
           buf =  Buffer.create 256;
           holder =  Textholder.make string_text ;
       } in

@@ -1,11 +1,10 @@
 open Eio.Std
-open Collaborative_editor__Snowflake
+open Snowflake
 open Service_types
-open Collaborative_editor__Crdt
-open Configurer_intf
+open Crdt
 open Tuiservice
 open Tuioperator
-open Collaborative_editor__Logger.Logger
+open Logger.Logger
 
 (* Adapted from my Raft multi-node code *)
 type single_node = {
@@ -15,6 +14,7 @@ type single_node = {
 [@@deriving_show]
 
 let snowflake_id = ref 0
+module type Node = Configurer_intf.Node
 
 let create_config_node env no  : (module Node)=
 
@@ -22,7 +22,7 @@ let node = create_snowflake_node (Int64.of_int 0) in
  let cap_id_map =
   let rec loop_while  i map =
     if i < no then(
-      let path = ( "/Users/anu/Documents/rays/collaborative-editor/lib/mergedoc/service/"
+      let path = ( "/Users/anu/Documents/rays/collaborative-editor/lib/mergedoc/"
                    ^ ( Int.to_string i) ^ ".cap") in
         let id = generate node in
         let map = EntryMap.add
@@ -43,7 +43,7 @@ let node = create_snowflake_node (Int64.of_int 0) in
     let cap_id_map = cap_id_map
     let env = env
   end in
-  (module Config_node: Configurer_intf.Node )
+  (module Config_node: Node )
 
 let  new_cluster no_of_nodes env sw=
    let n = create_config_node env no_of_nodes in
@@ -55,7 +55,7 @@ let  new_cluster no_of_nodes env sw=
    let rec loop_while la p i =
 
     if i < no_of_nodes then(
-      let path = ( "/Users/anu/Documents/rays/collaborative-editor/lib/mergedoc/service/" ^ ( Int.to_string i) ^ ".cap") in
+      let path = ( "/Users/anu/Documents/rays/collaborative-editor/lib/mergedoc/" ^ ( Int.to_string i) ^ ".cap") in
 
       Printf.printf "Generating snowflake Id";
       let module TuiService = TuiService.Make(TUIOp) in

@@ -40,7 +40,7 @@ type textholder  = {
 
     data : text;                (*Existential  *)
 
-    scroll : location
+    scroll : location           (* Scroll feature is not implemented *)
 
 }
 

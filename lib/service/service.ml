@@ -1,7 +1,8 @@
 open Capnp_rpc_lwt
 open Lwt.Infix
-open Collaborative_editor.Types
-open Collaborative_editor__Logger.Logger
+open Types
+open Logger.Logger
+
 
 module MergeApi = Merge.MakeRPC(Capnp_rpc_lwt)
 

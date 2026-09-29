@@ -1,5 +1,5 @@
 open Eio.Std
-open Mergedoc.Server
+open Collaborative_editor.Server
 
 
 let () =

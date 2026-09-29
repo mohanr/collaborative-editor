@@ -3,12 +3,16 @@ open Buffer
 open Format
 open Window
 open Terminal
-open Configure
+open Configurer
 open Logger.Logger
 open Editorview
 
 module  W  =Widget
-module C = Make
+module C : Configurer_intf.Configurer = struct
+  include Configurer_intf.MakeConfigurer
+
+  let set_size width height = { width; height }
+end
 module A = Area
 module B = Buffer(A)
 module BF = BufferManipulator (C) (B)

@@ -1,7 +1,8 @@
-
 (include_subdirs unqualified)
-(library
 
- (name mergedoc)  ; This name is referenced in the main `dune` file
- (modules tuioperator configurer_intf crdtclient server tuihandler_intf tuioperator tuiservice merge service crdtclient service_types)
- (libraries collaborative_editor capnp capnp-rpc-unix capnp-rpc-lwt ))
+(library
+ (name mergedoc)
+ (wrapped false)
+ (modules
+          merge )
+ (libraries capnp capnp-rpc-unix capnp-rpc-lwt))

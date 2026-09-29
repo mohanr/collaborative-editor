@@ -1,7 +1,7 @@
 open Service
 open Eio.Std
 open Tuioperator
-open Collaborative_editor__Crdt
+open Crdt
 
 let secret_key = `Ephemeral
 

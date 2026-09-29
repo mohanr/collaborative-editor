@@ -21,7 +21,7 @@ type t=Types.t
 let get_area() =
   (module Area:Arena)
 
-module Make( Config : Configurer_intf.Configurer) = struct
+module Make( Config : Configurer) = struct
   let new_buffer ()  =
   let config = Config.set_size 49 49 in
     let area : Types.Area.t = { x = 0;y = 0; (* TODO User Container area effectively *)

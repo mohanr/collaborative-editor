@@ -1,18 +1,11 @@
 open Types
 open Stdlib
 open Textholder
+open Tui_types
+
 
 module EditorState = struct
 
-type tui_editor_view = {
-    cursor_position: location Option.t;
-    buf : Buffer.t;
-    holder : Textholder.textholder;
-}
-
-type state = { next : tui_editor_view }
-
-type 'a t = state -> 'a * state
 
 let make text state =
   let var = state.next in
@@ -53,4 +46,11 @@ let bind (t : 'a t) ~(f : 'a -> 'b t) : 'b t =
 
 let return (editor_state : tui_editor_view) (state : state) = (editor_state , state)
 
+end
+
+module type EState =sig
+  include module type of EditorState
+   val make : Textholder.textholder  ->
+              state ->
+              tui_editor_view  * state
 end
