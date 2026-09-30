@@ -1,5 +1,4 @@
 open Types
-open Eio.Std
 open Effect.Deep
 open Logger.Logger
 (* https://xavierleroy.org/CdF/2023-2024/5.pdf *)
@@ -7,7 +6,7 @@ module Crdt = struct
 
   module Crdt_buffer = struct
 
-   exception Version_error of string
+   (* exception Version_error of string *)
 
    (* Local store before merging *)
    let doc_content_store = ref
@@ -138,7 +137,7 @@ module Crdt = struct
         )
         in
         (match loop_while left_index left_index false with
-        | effect Early_return idx, k ->
+        | effect Early_return idx, _k ->
           if idx = List.length doc.doc_content then
            doc.doc_content @ [new_item]
           else

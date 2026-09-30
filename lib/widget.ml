@@ -1,6 +1,5 @@
 open Types
 open Buffer
-open Format
 open Window
 open Terminal
 open Configurer

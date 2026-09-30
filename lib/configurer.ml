@@ -20,7 +20,7 @@ module Make(N:Node)  = struct
     other_nodes : string EntryMap.t;
     env : Eio_unix.Stdenv.base;
   }
-
+  (* Reused code doesn't need some features *)
   let set_config () =
     {
       other_nodes = get_server_urlmap (module N);

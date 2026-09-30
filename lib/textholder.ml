@@ -1,5 +1,3 @@
-open Widget
-open Buffer
 open Types
 
 module type Holder = sig

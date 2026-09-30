@@ -1,6 +1,5 @@
 open Effect
 open Effect.Deep
-open Crdt
 open Types
 (* https://github.com/ocaml-multicore/effects-examples/blob/master/state.ml *)
 
@@ -36,7 +35,7 @@ module DocContent= Localdoc (struct
   type t = doc
 end)
 
-let rec new_content doc : unit =
+let new_content doc : unit =
   DocContent.(
     set doc;
   )

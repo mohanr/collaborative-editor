@@ -1,5 +1,3 @@
-open Ppx_compare_lib
-open Ppx_deriving_runtime
 open Base
 open Containers
 
@@ -56,7 +54,6 @@ end
  let get_y()  = t.y
  let get_width()  = t.width
  let get_height()  = t.height
- let right() = t.x
 end
 
 type t = {

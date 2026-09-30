@@ -1,6 +1,5 @@
 open Buffer
 open Types
-open Configurer_intf
 
 
 module MockDriver =

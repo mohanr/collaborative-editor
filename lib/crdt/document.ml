@@ -47,7 +47,7 @@ let merge_both  src_content dest_content =
    let missing_content_length = List.length check_for_missing_content  in
   (* What is the length of this missing content ? *)
 
-  let rec loop_while_outer doc i merged_count missing =
+  let rec loop_while_outer doc i missing =
      (* Printf.printf "outer: i=%d, missing_len=%d, non_null=%d\n" *)
      (*  i missing_content_length *)
      (*  (List.length (List.filter Option.is_some missing)); *)
@@ -94,11 +94,11 @@ let merge_both  src_content dest_content =
           if count = 0 then
             Effect.perform (Effect_merger_error doc)
           else
-            loop_while_outer l1 (i - 1) 0 l
+            loop_while_outer l1 (i - 1)  l
     ) else doc
     in
-      (match loop_while_outer dest_content  missing_content_length 0 check_for_missing_content  with
-        | effect Effect_merger_error v, k -> let() = Printf.printf "Not merging properly"
+      (match loop_while_outer dest_content  missing_content_length  check_for_missing_content  with
+        | effect Effect_merger_error v, _k -> let() = Printf.printf "Not merging properly"
                                                  in v
         | iteml -> iteml;
        )

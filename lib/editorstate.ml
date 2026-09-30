@@ -4,7 +4,7 @@ open Textholder
 open Tui_types
 
 
-module EditorState = struct
+module EditorState  = struct
 
 
 let make text state =
@@ -50,7 +50,7 @@ end
 
 module type EState =sig
   include module type of EditorState
-   val make : Textholder.textholder  ->
-              state ->
-              tui_editor_view  * state
+   (* val make : Textholder.textholder  -> *)
+   (*            state -> *)
+   (*            tui_editor_view  * state *)
 end

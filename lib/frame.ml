@@ -1,4 +1,3 @@
-open Buffer
 open Types
 open Tui_types
 

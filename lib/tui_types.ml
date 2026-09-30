@@ -3,7 +3,6 @@ open Configurer
 open Buffer
 open Textholder
 
-type key = [ | `ASCII of char ]
 
   (*  Viewport etc.*)
 type frame = {

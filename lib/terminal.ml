@@ -1,5 +1,4 @@
 open Term_driver
-open Buffer
 open Types
 open Logger.Logger
 

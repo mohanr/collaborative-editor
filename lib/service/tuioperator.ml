@@ -7,11 +7,15 @@ open Event_stream
 open Logger.Logger
 open Editorstate
 open Editorcontext
+open Tui_types
 
 module type TUIHandler = sig
   val periodic_timer : Eio_unix.Stdenv.base -> unit
 end
 
+module Ed : sig
+    val init_state : string -> tui_editor_view
+  end = EditorContext (EventStream) (EditorState)
 module TUIOperator = struct
 
 let unpaused = ref (Promise.create_resolved ())
@@ -44,7 +48,7 @@ let run env =
    Eio.Switch.run @@ fun _ ->
    let cond = Eio.Condition.create () in
    let clock = Eio.Stdenv.clock env in
-   Renderer.render();           (* Eve nt handlers for this is pending *)
+   Renderer.render();           (* Event handlers for this is pending *)
    Fiber.both  (fun () ->
      while true do
         Promise.await !unpaused;

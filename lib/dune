@@ -1,16 +1,15 @@
 (include_subdirs unqualified)
-
 (env
  (dev
   (flags
-   (:standard -warn-error -26))))
+   (:standard -warn-error -26-69-32-33-34-27))))
 
 (library
  (name collaborative_editor)
  (preprocess
   (pps ppx_deriving.show ppx_compare ppx_sexp_conv))
  (libraries logs logs.fmt logs.lwt timedesc capnp-rpc-unix capnp-rpc-lwt
-   lwt_eio core eio_main containers re mergedoc)
+   lwt_eio core eio_main containers re mergedoc )
  (modules service_types editorcontext editorview tui_types logger snowflake
           shared_local_doc editorstate event_stream consoletable layout_types
           layout_configurer_intf terminal types term_driver document

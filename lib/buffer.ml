@@ -6,7 +6,7 @@ open Types
 module type BUFFERMAKER = sig
 
   type t
-  module Make( Config : Configurer_intf.Configurer) : sig
+  module Make( _ : Configurer) : sig
     val new_buffer : unit -> t
   end
 end
@@ -18,8 +18,6 @@ module Buffer ( Area :  Types.Arena )
 
 type t=Types.t
 
-let get_area() =
-  (module Area:Arena)
 
 module Make( Config : Configurer) = struct
   let new_buffer ()  =
