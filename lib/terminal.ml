@@ -12,6 +12,7 @@ module type terminal_operations  = sig
   module Cursor : sig
     val hide_cursor  : unit -> string
     val set_cursor_position : location ref -> string
+    val set_cursor_new_position : location  -> unit
     val set_cursor_blinking : unit -> unit
   end
 end
@@ -85,11 +86,30 @@ module Cursor = struct
     let set_cursor_position location=
         Printf.sprintf  "\x1b[%d;%dH" !location.x !location.y
 
-    let set_cursor_blinking() =
+    let set_cursor_new_position location=
         let fd = Unix.descr_of_out_channel stdout in
-        let out = code.text_cursor_enable_blinking in
+        let out =  Printf.sprintf  "\x1b[%d;%dH" location.x location.y in
         ignore (Unix.write_substring fd out
                 0 (String.length out))
+
+    let set_cursor_color  =
+        Printf.sprintf "\x1b]12;#00FFFF\007"
+
+    let set_cursor_blinking() =
+        let fd = Unix.descr_of_out_channel stdout in
+        let out = code.text_cursor_enable in
+        ignore (Unix.write_substring fd out
+                0 (String.length out));
+        let out = code.text_cursor_enable_blinking in
+        ignore (Unix.write_substring fd out
+                0 (String.length out));
+        let out = set_cursor_color in
+        ignore (Unix.write_substring fd out
+                0 (String.length out));
+
+
+
+
 
 end
 end

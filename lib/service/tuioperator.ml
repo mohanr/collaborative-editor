@@ -43,12 +43,13 @@ let receive_event () =
 
 
 let run env =
-
    let _ = log_m "periodic timer " in
    Eio.Switch.run @@ fun _ ->
    let cond = Eio.Condition.create () in
    let clock = Eio.Stdenv.clock env in
+
    Renderer.render();           (* Event handlers for this is pending *)
+   let _view = Ed.init_state "Test" in
    Fiber.both  (fun () ->
      while true do
         Promise.await !unpaused;
