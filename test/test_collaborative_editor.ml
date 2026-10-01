@@ -1,11 +1,6 @@
-open Collaborative_editor__Configurer_intf.MakeConfigurer
-open Collaborative_editor__Configurer_intf
 open Collaborative_editor.Crdt.CRDTOp.Crdt_buffer
-open Eio.Std
-open Effect.Deep
 open Core
 open Collaborative_editor__Types
-open Collaborative_editor__Layout_types
 open Collaborative_editor__Layout_configurer_intf
 
 let create_config_node () : (module Configurer)=

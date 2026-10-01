@@ -40,9 +40,9 @@ let module C = (val config : Configurer) in
           buf =  Buffer.create 256;
           holder =  Textholder.make string_text ;
       } in
-        let (c, s) = run ({ next = init_state}) in
+        let (c, _s) = run ({ next = init_state}) in
         match c with
-      | {cursor_position = c  ; buf = b; holder = h} ->
+      | {cursor_position = c  ; buf = _b; holder = _h} ->
         (match c with
         | Some l ->
         Printf.printf  "x = %d y = %d"  l.x l.y;
