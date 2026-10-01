@@ -24,8 +24,24 @@ let await_timeout timeout_mutex =
     Eio.Condition.await_no_mutex timeout_mutex
 
 (* https://github.com/ocaml-community/lambda-term/blob/master/src/lTerm.ml *)
+let parse p flow ~max_size =
+  let buf = Eio.Buf_read.of_flow flow ~max_size in
+  Eio.Buf_read.format_errors p buf
 
-let receive_event () =
+let message =
+        let open Eio.Buf_read.Syntax in
+        let+ msg = Eio.Buf_read.uint8 in
+         msg
+
+let get_flow_buffer env =
+ Eio.Stdenv.stdin env
+
+let read_eio_stdin buf =
+        match parse message buf ~max_size:1024 with
+        | Ok  msg  -> let _ = log_m "%d " msg in ()
+        | Error (`Msg err) -> Eio.traceln "Parse failed: %s" err
+
+let receive_event buf =
     let _stream = EventStream.get_event_stream() in
     let stdin_fd =get_in_channel () in
     let open Stdlib in
@@ -33,10 +49,7 @@ let receive_event () =
     let loop_while_event () =
 
       try while true do
-        let key =   In_channel.input_line stdin_fd in
-          match key with
-          | Some s  ->  Printf.printf "%s" s;
-          | None ->  ()
+        read_eio_stdin buf
       done with End_of_file -> ()
     in
     loop_while_event ()
@@ -50,6 +63,7 @@ let run env =
 
    Renderer.render();           (* Event handlers for this is pending *)
    let _view = Ed.init_state "Test" in
+   let stdin_buf = get_flow_buffer env in
    Fiber.both  (fun () ->
      while true do
         Promise.await !unpaused;
@@ -60,7 +74,7 @@ let run env =
   (fun () ->
     let rec loop () =
       await_timeout cond;
-      receive_event ();
+      receive_event stdin_buf;
       flush stdout;
       Fiber.yield ();
       loop ()
