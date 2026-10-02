@@ -26,11 +26,12 @@ let await_timeout timeout_mutex =
 (* https://github.com/ocaml-community/lambda-term/blob/master/src/lTerm.ml *)
 let parse p flow ~max_size =
   let buf = Eio.Buf_read.of_flow flow ~max_size in
-  Eio.Buf_read.format_errors p buf
+  Eio.Buf_read.format_errors p buf (* No EOF marker is required *)
+                                      (* and each character is read *)
 
 let message =
         let open Eio.Buf_read.Syntax in
-        let+ msg = Eio.Buf_read.uint8 in
+        let msg = Eio.Buf_read.uint8 in
          msg
 
 let get_flow_buffer env =
@@ -61,7 +62,7 @@ let run env =
    let cond = Eio.Condition.create () in
    let clock = Eio.Stdenv.clock env in
 
-   Renderer.render();           (* Event handlers for this is pending *)
+   Renderer.render();
    let _view = Ed.init_state "Test" in
    let stdin_buf = get_flow_buffer env in
    Fiber.both  (fun () ->

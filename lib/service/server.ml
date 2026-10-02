@@ -45,12 +45,13 @@ let node = create_snowflake_node (Int64.of_int 0) in
   end in
   (module Config_node: Node )
 
-let  new_cluster no_of_nodes env sw=
+let  new_cluster no_of_nodes env sw la =
    let n = create_config_node env no_of_nodes in
    let module Config_Node = (val n  : Configurer_intf.Node)  in
 
-   let listen_address = [`TCP ("127.0.0.1", 8888) ] in
+   let listen_address = [`TCP ("127.0.0.1", (int_of_string la)) ] in
 
+   let _ = log_m "[%s]" la in
    let list_of_servers =
    let rec loop_while la p i =
 
@@ -96,13 +97,13 @@ let connect net env uri sw =
   let sr = Capnp_rpc_unix.Vat.import_exn client_vat uri in
   Capnp_rpc_unix.with_cap_exn sr (fun cap -> Lwt_eio.run_lwt ( fun () -> run_client env cap))
 
-let boot_server() =
+let boot_server listen_address =
   Eio_main.run @@ fun env ->
   Lwt_eio.with_event_loop ~clock:(Eio.Stdenv.clock env) @@ fun () ->
   Eio.Switch.run (fun sw ->
   Logs.set_level (Some Debug);
   (* Waiting here to allow the server to start properly *)
-  let new_cluster = new_cluster 1 env sw in
+  let new_cluster = new_cluster 1 env sw listen_address in
   let t = Timedesc.Span.make  ~s:95L () in
   Eio.Time.sleep (Eio.Stdenv.clock env) (Timedesc.Span.to_float_s t) ;
   let rec loop_while  i  =
