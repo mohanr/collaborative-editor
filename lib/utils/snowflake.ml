@@ -89,7 +89,8 @@ let create_snowflake_node node=
 
 
 let generate n  =
-   Printf.printf "Generating Snowflake Id\n";
+   (* Printf.printf "Generating Snowflake Id\n"; *)
+
    Eio_main.run @@ fun env ->
    Eio.Switch.run @@ fun sw ->
    let clock = Eio.Stdenv.clock env in
@@ -102,7 +103,8 @@ let generate n  =
          if  Int64.equal milli node.time then(
              node.step <- Int64.logand (Int64.add node.step  (Int64.of_int 1))  node.stepmask;
 
-             Fmt.pr " node.step  %Ld\n"  node.step;
+             (* Fmt.pr " node.step  %Ld\n"  node.step; *)
+
              if Int64.equal node.step 0L then(
                  let rec loop_while() =
 
@@ -117,9 +119,9 @@ let generate n  =
                  node.time <- new_millis;
              );
          )else(
-             Fmt.pr " node.step is set to %Ld\n"  0L;
+             (* Fmt.pr " node.step is set to %Ld\n"  0L; *)
              node.step <- 0L;
-             Fmt.pr " node.time is set from %Ld to %Ld\n" node.time milli;
+             (* Fmt.pr " node.time is set from %Ld to %Ld\n" node.time milli; *)
              node.time <-   milli;
 
          );

@@ -4,6 +4,7 @@ open Buffer
 open Textholder
 
 
+ type key = [ | `ASCII of char ]
   (*  Viewport etc.*)
 type frame = {
     cursor_position: location Option.t;

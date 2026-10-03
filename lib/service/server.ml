@@ -58,7 +58,8 @@ let  new_cluster no_of_nodes env sw la =
     if i < no_of_nodes then(
       let path = ( "/Users/anu/Documents/rays/collaborative-editor/lib/mergedoc/" ^ ( Int.to_string i) ^ ".cap") in
 
-      Printf.printf "Generating snowflake Id";
+      (* Printf.printf "Generating snowflake Id"; *)
+
       let module TuiService = TuiService.Make(TUIOp) in
       Fiber.fork_daemon ~sw ( fun () ->
           ignore(TuiService.start_server  env#net env  (List.nth la i) path
@@ -68,7 +69,8 @@ let  new_cluster no_of_nodes env sw la =
           `Stop_daemon
 
       );
-      Printf.printf "\nNode %d\n" i;
+      (* Printf.printf "\nNode %d\n" i; *)
+
       loop_while la ( p @ [path]) (i + 1)
     )
     else p
