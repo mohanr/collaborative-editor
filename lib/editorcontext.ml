@@ -19,7 +19,7 @@ module EditorContext( EventStream: STREAMER )
 
            Effect.perform (Set_cursor_blinking
                    {
-                       cursor_position = Some{ x = 10;y = 10 }; (* Should be Location *)
+                       cursor_position = Some{ x = 6;y = 11 }; (* Should be Location *)
                        buf =  Stdlib.Buffer.create 256;
                        holder =  Textholder.make string_text ;
                    }) in

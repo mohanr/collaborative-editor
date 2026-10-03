@@ -61,7 +61,7 @@ let ansi_escape_codes() = {
   reset_text_cursor_enable = "\x1b[?25l";
   set_window_title1 = "\x1b]2;";
   set_window_title2 =  "\x07";
-  text_cursor_enable_blinking = "\x1b[?12h"
+  text_cursor_enable_blinking = "\x1b[?12h\x1b[1 q"
 }
 (* https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences *)
 
