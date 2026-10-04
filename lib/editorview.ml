@@ -98,23 +98,4 @@ let render (area : Area.t) ?( custom_formatter = Format.std_formatter) (buf : t)
        b
 
 
-let render_child_view buf child child_width dst_row dst_col height =
-  let open Stdlib in
-  let len = String.length child in
-    let rec loop r h =
-    if r <= h then (
-       Buffer.add_string buf
-         (Terminal.Cursor.set_cursor_position
-            (ref { x = dst_row + r; y = dst_col }));
-       let start = r * child_width in
-       let n = max 0 (min child_width (len - start)) in
-       if n > 0 then
-         Buffer.add_substring buf child start n
-       else ();
-       loop (r + 1) h
-    )
-    else ()
-    in
-    loop 0 (height - 1)
-
 end
