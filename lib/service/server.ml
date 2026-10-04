@@ -1,7 +1,6 @@
 open Eio.Std
 open Snowflake
 open Service_types
-open Crdt
 open Tuiservice
 open Tuioperator
 open Logger.Logger
@@ -45,7 +44,7 @@ let node = create_snowflake_node (Int64.of_int 0) in
   end in
   (module Config_node: Node )
 
-let  new_cluster no_of_nodes env sw la =
+let  new_cluster no_of_nodes env sw la cap_file_id =
    let n = create_config_node env no_of_nodes in
    let module Config_Node = (val n  : Configurer_intf.Node)  in
 
@@ -56,7 +55,7 @@ let  new_cluster no_of_nodes env sw la =
    let rec loop_while la p i =
 
     if i < no_of_nodes then(
-      let path = ( "/Users/anu/Documents/rays/collaborative-editor/lib/mergedoc/" ^ ( Int.to_string i) ^ ".cap") in
+      let path = ( "/Users/anu/Documents/rays/collaborative-editor/lib/mergedoc/" ^ ( Int.to_string cap_file_id ) ^ ".cap") in
 
       (* Printf.printf "Generating snowflake Id"; *)
 
@@ -85,7 +84,6 @@ let  new_cluster no_of_nodes env sw la =
 
 
 let run_client _env service =
-  let open Lwt.Syntax in
   let open Crdtclient.Client in
   (* TODO LET* *)
   let _ = mergedoc service in
@@ -99,13 +97,28 @@ let connect net env uri sw =
   let sr = Capnp_rpc_unix.Vat.import_exn client_vat uri in
   Capnp_rpc_unix.with_cap_exn sr (fun cap -> Lwt_eio.run_lwt ( fun () -> run_client env cap))
 
-let boot_server listen_address =
+(* This is  temporary logic to connect to the only other replica. *)
+(* If '0.cap'  is the current 'cap' file, connect using '1.cap' which *)
+(* is the other replica's file . The number '0' or '1' is passed using *)
+(* Cmdliner *)
+let get_replica_cap_file cap_file_id  =
+  match cap_file_id  with
+  | x when x = 0 ->
+      "/Users/anu/Documents/rays/collaborative-editor/lib/mergedoc/"
+      ^ ( Int.to_string 1 ) ^ ".cap"
+  | x when x = 1 ->
+      "/Users/anu/Documents/rays/collaborative-editor/lib/mergedoc/"
+      ^ ( Int.to_string 0 ) ^ ".cap"
+  | _  -> failwith "Incorrectly configured cap file path"
+
+
+let boot_server listen_address cap_file_id =
   Eio_main.run @@ fun env ->
   Lwt_eio.with_event_loop ~clock:(Eio.Stdenv.clock env) @@ fun () ->
   Eio.Switch.run (fun sw ->
   Logs.set_level (Some Debug);
   (* Waiting here to allow the server to start properly *)
-  let new_cluster = new_cluster 1 env sw listen_address in
+  let new_cluster = new_cluster 1 env sw listen_address cap_file_id in
   let t = Timedesc.Span.make  ~s:95L () in
   Eio.Time.sleep (Eio.Stdenv.clock env) (Timedesc.Span.to_float_s t) ;
   let rec loop_while  i  =
@@ -113,7 +126,7 @@ let boot_server listen_address =
   Eio.Time.sleep (Eio.Stdenv.clock env) (Timedesc.Span.to_float_s t) ;
   if i < new_cluster.no_of_nodes then(
       let _ = connect env#net env
-       (match (get_url (List.nth new_cluster.server_cap_files i)) with
+       (match (get_url (get_replica_cap_file cap_file_id )) with
          | `Error _ -> failwith "Error in Uri.t"
          | `Ok o -> o) sw in
       loop_while  (i + 1));

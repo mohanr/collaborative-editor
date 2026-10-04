@@ -65,6 +65,7 @@ let draw_vborder_in_buffer border width =
     |  _-> buffer
   in
      draw border (Buffer.create width)
+
 let render (area : Area.t) ?( custom_formatter = Format.std_formatter) (buf : t) : Stdlib.Buffer.t =
        let open Stdlib in
        let b = buf.contents in
@@ -92,9 +93,6 @@ let render (area : Area.t) ?( custom_formatter = Format.std_formatter) (buf : t)
        Buffer.add_buffer b (draw_hborder_in_buffer
                                (HoBorder plain_style.horizontal_bottom) area.width false);
 
-           (* let _ = log_m *)
-           (*   "V: value=%S\n%!" *)
-           (*   (Buffer.contents b) in *)
        b
 
 
