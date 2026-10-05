@@ -23,9 +23,10 @@ module Crdt = struct
 
      with Failure arg ->
        let open Sexplib in
-       Printf.printf "There is no character at position %d\n" pos;
+       let _ = log_m "(Benign)There is no character at position %d\n" pos in
        List.iter (fun v ->
-        Format.printf "Content %a\n" Sexp.pp_hum ([%sexp_of: item] v )) doc.doc_content ;
+        let _ = log_m  "Content %a\n" Sexp.pp_hum ([%sexp_of: item] v ) in ())
+                                                   doc.doc_content ;
        Effect.perform (Failure arg )
 
    let get_left_or_right_elt doc pos =
@@ -148,7 +149,7 @@ module Crdt = struct
                  if i = idx then [new_item; x] else [x]
                ) doc.doc_content
              )
-        | _ -> Printf.printf "All are handled by effects";
+        | _ -> let _ = log_m "All are handled by effects" in ();
                doc.doc_content
        )
 
