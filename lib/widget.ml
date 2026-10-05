@@ -9,7 +9,6 @@ open Editorview
 module  W  =Widget
 module C : Configurer_intf.Configurer = struct
   include Configurer_intf.MakeConfigurer
-
   let set_size width height = { width; height }
 end
 module A = Area
