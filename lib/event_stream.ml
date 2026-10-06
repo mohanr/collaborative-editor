@@ -6,6 +6,8 @@ open Buffer
 open Configurer
 open Types
 open Widget.Renderer
+open Editorstate
+open Editorcontext
 
 module type STREAMER = sig
     val get_event_stream : unit -> key Eio.Stream.t
@@ -15,6 +17,10 @@ end
 
 type _ Effect.t += ShowContent : string ->  unit Effect.t
 
+(*  TODO Make this reusable*)
+module Ed : sig
+    val init_state : string -> tui_editor_view
+  end = EditorContext (EditorState)
 (*  TODO Make this reusable*)
 module C : Configurer_intf.Configurer = struct
   include Configurer_intf.MakeConfigurer
@@ -70,6 +76,7 @@ let insert_local_doc c =
               | effect ShowContent v, _k ->
                     data_buffer := update_data_in_buffer v;
                     render();
+                     let _view = Ed.init_state "" in
                     Fiber.yield ()
               | key -> ());
                with End_of_file -> ()

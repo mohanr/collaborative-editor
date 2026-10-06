@@ -6,6 +6,17 @@ open Tui_types
 
 module EditorState  = struct
 
+  let state_store  = ref {
+   next = {
+          cursor_position = Some{ x = 1;y = 1 };
+          buf =  Buffer.create 256;
+          holder =  Textholder.make (Textholder.make_string_text()) ;
+      }
+    }
+
+  let get () = !state_store
+
+  let set state =  state_store   := state
 
 let make text state =
   let var = state.next in
@@ -46,6 +57,10 @@ let bind (t : 'a t) ~(f : 'a -> 'b t) : 'b t =
 
 let return (editor_state : tui_editor_view) (state : state) = (editor_state , state)
 
+let run f =
+    let new_view, state =  bind f  ~f:return !state_store  in
+    state_store := state;
+    new_view
 end
 
 module type EState =sig

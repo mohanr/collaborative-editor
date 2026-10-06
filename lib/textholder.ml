@@ -23,7 +23,6 @@ end
 module Textholder = struct
 
 (* An existential is an abstraction of data representation *)
-
 type 'text representation= {
 
   self : 'text ;
@@ -31,6 +30,12 @@ type 'text representation= {
   text_length : 'text -> int
 }
 type text = Text : 'text representation-> text
+
+let make_string_text() =
+  Text {
+    self = String.empty;
+    text_length = String.length;
+  }
 
 let text_length (Text {text_length; self}) = text_length self
 

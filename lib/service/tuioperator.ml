@@ -15,7 +15,7 @@ end
 
 module Ed : sig
     val init_state : string -> tui_editor_view
-  end = EditorContext (EventStream) (EditorState)
+  end = EditorContext (EditorState)
 module TUIOperator = struct
 
 let unpaused = ref (Promise.create_resolved ())
@@ -72,7 +72,7 @@ let run env =
    Renderer.render();
    EventStream.handle_event sw;
 
-   let _view = Ed.init_state "Test" in
+   let _view = Ed.init_state "" in
    (* EventStream.handle_event sw; *)
 
    let eio_stdin = get_eio_stdin env in

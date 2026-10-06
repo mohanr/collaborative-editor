@@ -1,14 +1,13 @@
 open Tui_types
-open Event_stream
 open Textholder
 open Terminal.Terminal.Cursor
 open Editorstate
 open Logger.Logger
 
-module EditorContext( EventStream: STREAMER )
+module EditorContext
                     ( EditorState : EState  ) = struct
 
-
+      (* Initial state in the state machine *)
       let init_state text =
         let effectful_init_state () =
            let string_text =
@@ -23,6 +22,7 @@ module EditorContext( EventStream: STREAMER )
                        buf =  Stdlib.Buffer.create 256;
                        holder =  Textholder.make string_text ;
                    }) in
+        let state_to_persist =
         (match effectful_init_state ()  with
         | effect Set_cursor_blinking v, k ->
                                 let () =
@@ -34,5 +34,12 @@ module EditorContext( EventStream: STREAMER )
                                 let () = set_cursor_blinking() in
                                 v
         | state-> state
-       )
+       )in
+        EditorState.set {next = state_to_persist};
+
+        state_to_persist
+
+let load_buffer ( var : tui_editor_view ) = (* State is stored.State passing *)
+                                               (* style should be explored. *)
+           EditorState.run ( EditorState.make_buffer var )
 end
