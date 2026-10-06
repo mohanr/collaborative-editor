@@ -3,7 +3,16 @@ open Textholder
 open Terminal.Terminal.Cursor
 open Editorstate
 open Logger.Logger
+open Buffer
+open Configurer
+open Types
+module  W  =Widget
+module C = Make
+module A = Area
+module B = Buffer(A)
 
+type _ Effect.t += Set_cursor_blinking :  tui_editor_view   ->
+                                          tui_editor_view   Effect.t
 module EditorContext
                     ( EditorState : EState  ) = struct
 
@@ -39,7 +48,25 @@ module EditorContext
 
         state_to_persist
 
-let load_buffer ( var : tui_editor_view ) = (* State is stored.State passing *)
-                                               (* style should be explored. *)
-           EditorState.run ( EditorState.make_buffer var )
+let load_buffer text = (* State is stored.State passing *)
+                       (* style should be explored. *)
+           let string_text =
+             Textholder.Text {
+               self = text ;
+               text_length = String.length;
+             } in
+            let b = Stdlib.Buffer.create 256 in
+            let () = Stdlib.Buffer.add_string b text
+            in
+            let _ = log_m "Buffer contents %s"
+                (Stdlib.Buffer.contents b) in
+            let var =
+            {
+                cursor_position = Some{ x = 6;y = 11 };
+                buf =  b ;
+                holder =  Textholder.make string_text ;
+            } in
+           EditorState.run ( EditorState.load_buffer var )
+
+  let get () = EditorState.get
 end

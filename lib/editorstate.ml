@@ -18,17 +18,21 @@ module EditorState  = struct
 
   let set state =  state_store   := state
 
-let make text state =
-  let var = state.next in
-  let state =
-      {next = {
-          cursor_position = Some{ x = 1;y = 1 };
-          buf =  Buffer.create 256;
-          holder =  Textholder.make text;
-      }
-      }
-  in
-  (var, state)
+let load_buffer var (state : state) =
+    let new_var =
+     match !state_store, var with
+          |{ next = { cursor_position = _;
+             buf =  b;
+             holder = _;}} ,
+          {  cursor_position = _;
+             buf =  b1;
+             holder = _;} ->
+      {
+         var with buf = let () = Stdlib.Buffer.add_buffer b b1 in
+                        b
+      } in
+      let new_state = { next = new_var } in
+      (new_var, new_state)
 
 (* Probably buffer size change after creation *)
 let make_buffer var (state : state) =
@@ -58,8 +62,15 @@ let bind (t : 'a t) ~(f : 'a -> 'b t) : 'b t =
 let return (editor_state : tui_editor_view) (state : state) = (editor_state , state)
 
 let run f =
+    let open Logger.Logger in
     let new_view, state =  bind f  ~f:return !state_store  in
     state_store := state;
+    let _ = match state with
+          |{ next = { cursor_position = _;
+             buf =  b;
+             holder = _;}} ->
+            let _ = log_m "Buffer contents %s" (Buffer.contents b) in
+            () in
     new_view
 end
 

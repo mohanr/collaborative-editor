@@ -10,8 +10,8 @@
   (pps ppx_deriving.show ppx_compare ppx_sexp_conv))
  (libraries logs logs.fmt logs.lwt timedesc capnp-rpc-unix capnp-rpc-lwt
    lwt_eio core eio_main containers re mergedoc )
- (modules service_types editorcontext editorview tui_types logger snowflake
-          shared_local_doc editorstate event_stream consoletable layout_types
+ (modules service_types editorstate editorcontext editorview tui_types logger snowflake
+          shared_local_doc event_stream consoletable layout_types
           layout_configurer_intf terminal types term_driver document
           crdt_intf configurer_intf buffer configurer server tuiservice service tuioperator
           tuihandler_intf crdtclient window frame

@@ -12,7 +12,6 @@ open Editorcontext
 module type STREAMER = sig
     val get_event_stream : unit -> key Eio.Stream.t
     val handle_event : Eio.Switch.t -> unit
-    val get_data_buffer :  unit -> B.t
 end
 
 type _ Effect.t += ShowContent : string ->  unit Effect.t
@@ -20,6 +19,7 @@ type _ Effect.t += ShowContent : string ->  unit Effect.t
 (*  TODO Make this reusable*)
 module Ed : sig
     val init_state : string -> tui_editor_view
+    val load_buffer : string -> tui_editor_view
   end = EditorContext (EditorState)
 (*  TODO Make this reusable*)
 module C : Configurer_intf.Configurer = struct
@@ -36,16 +36,8 @@ module EventStream :  STREAMER= struct
   let get_event_stream() =
     stream
 
-  let data_buffer = ref (BF.make_buffer())
-
-  let get_data_buffer() = !data_buffer
-
   let update_data_in_buffer data =
-    match !data_buffer  with
-    | {area = _; contents = c} ->
-        {!data_buffer with contents =
-                            let b = Stdlib.Buffer.create 256 in
-                            let () = Stdlib.Buffer.add_string b data in b }
+     Ed.load_buffer data
 
 
 let insert_local_doc c =
@@ -74,9 +66,8 @@ let insert_local_doc c =
               (try
               (match  (update_contents  Eio.Stream.take  stream) with
               | effect ShowContent v, _k ->
-                    data_buffer := update_data_in_buffer v;
+                    let _new_view = update_data_in_buffer v in
                     render();
-                     let _view = Ed.init_state "" in
                     Fiber.yield ()
               | key -> ());
                with End_of_file -> ()

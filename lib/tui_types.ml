@@ -21,12 +21,3 @@ type tui_editor_view = {
 type state = { next : tui_editor_view }
 
 type 'a t = state -> 'a * state
-
-
-module  W  =Widget
-module C = Make
-module A = Area
-module B = Buffer(A)
-
-type _ Effect.t += Set_cursor_blinking :  tui_editor_view   ->
-                                          tui_editor_view   Effect.t
