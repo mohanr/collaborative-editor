@@ -2,6 +2,7 @@ open Capnp_rpc_lwt
 open Lwt.Infix
 open Types
 open Logger.Logger
+open Document.Document
 
 
 module MergeApi = Merge.MakeRPC(Capnp_rpc_lwt)
@@ -90,10 +91,10 @@ let merge_local =
                      :: acc) [] item_list
         in il
       in
-      let _item_list = extract_item (Params.itemlist_get_list params) in
+      let item_list = extract_item (Params.itemlist_get_list params) in
       let doc_content = Params.doccontent_get_list params in
       let new_map = VersionMap.empty in
-      let _version_map =
+      let version_map =
                   List.fold_left
                   (fun acc kv -> VersionMap.add
                       (VersionTuple.key_get kv)
@@ -104,8 +105,49 @@ let merge_local =
       let response, results = Service.Response.create
           MergeApi.Service.MergeDoc.Mergedoc.Results.init_pointer in
       (* Call the service *)
-      let _ = MergeApi.Service.MergeDoc.Mergedoc.Results.itemlist_set_list  results [] in
-      let _ = MergeApi.Service.MergeDoc.Mergedoc.Results.doccontent_set_list  results [] in
+      let doc = Document.Document.remote_merge_both
+                                 { doc_content = item_list;
+                                   version = version_map } in
+
+      let item_builder = MergeApi.Service.MergeDoc.Mergedoc.Results.itemlist_init
+                                                            results
+                                                            (List.length doc.doc_content) in
+      let version_builder = MergeApi.Service.MergeDoc.Mergedoc.Results.doccontent_init
+                                                            results
+                                                            (VersionMap.cardinal doc.version) in
+      let open MergeApi.Builder in
+      (* let _ = MergeApi.Service.MergeDoc.Mergedoc.Results.itemlist_set_list  results [] in *)
+      (* let _ = MergeApi.Service.MergeDoc.Mergedoc.Results.doccontent_set_list  results [] in *)
+      List.iteri (fun i item ->
+                              let allocated_i = Capnp.Array.get item_builder i  in
+                              Item.content_set  allocated_i item.content;
+                              let id = Item.id_init  allocated_i  in
+                              let () = Ident.agent_set  id (match item.id.agent with None -> String.empty| Some a -> a) in
+                              Ident.seq_set_exn  id (match item.id.seq with None -> 0| Some a -> a ); (* TODO 0 could be valid *)
+                              let ol = Item.originleft_init  allocated_i  in
+                              let idu = IdentityU.message_init ol in
+                              (match item.origin_left with
+                              | None -> IdentityU.Message.noneidentity_set idu
+                              | Some v -> let some_idu = IdentityU.Message.someidentity_init idu in
+                                          let a = Identity.agent_init some_idu in
+                                          let au = AgentU.message_init a in
+                                          let () =
+                                            (match item.id.agent with
+                                              |None -> AgentU.Message.noneagent_set au
+                                              |Some agent ->  AgentU.Message.someagent_set au agent ) in
+                                          let s = Identity.seq_init some_idu in
+                                          let su = SeqU.message_init s in
+                                          let () =
+                                            (match item.id.seq with
+                                              |None -> SeqU.Message.noneseq_set su
+                                              |Some seq -> SeqU.Message.someseq_set_exn su seq ) in ()
+
+                              )) doc.doc_content ;
+      List.iteri (fun i (k, v) ->
+                              let allocated_v = Capnp.Array.get version_builder i  in
+                              let () = MergeApi.Builder.VersionTuple.key_set allocated_v k in
+                              MergeApi.Builder.VersionTuple.value_set_exn allocated_v v
+                           ) (VersionMap.bindings doc.version) ;
       Service.return response
 
 end

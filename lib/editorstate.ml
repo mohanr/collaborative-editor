@@ -78,7 +78,4 @@ end
 
 module type EState =sig
   include module type of EditorState
-   (* val make : Textholder.textholder  -> *)
-   (*            state -> *)
-   (*            tui_editor_view  * state *)
 end

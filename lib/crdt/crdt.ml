@@ -153,28 +153,7 @@ module Crdt = struct
                doc.doc_content
        )
 
-   (* Local store before merging *)
-    let insert_local_store doc agent pos text =
-    let version =  check_version doc agent in
-    let item = {
-         content = text;
-         id = { agent = Some agent ; seq = Some version };
-         origin_left = get_left_or_right_elt doc  (pos - 2);
-         origin_right = get_left_or_right_elt doc (pos - 1);
-         deleted = false
-       } in
-    let updated_content = merge doc item in
-
-   let c =
-        List.map (fun item -> item.content) updated_content
-        |> String.concat " " in
-   let _ =  log_message (fun args -> args c) pp_log in
-   let updated_version = VersionMap.add agent version doc.version  in
-     {
-       doc_content = updated_content;
-       version = updated_version
-     }
-
+    (* Local insert before mergine with local document *)
     let insert doc agent pos text =
     let version =  check_version doc agent in
     let item = {
@@ -187,10 +166,13 @@ module Crdt = struct
     let updated_content = merge doc item in
 
    let updated_version = VersionMap.add agent version doc.version  in
+   let updated_doc =
       {
         doc_content = updated_content;
         version = updated_version
-      }
+      } in
+   doc_content_store :=  updated_doc ;       (* Local store for replica *)
+   updated_doc
     end
 
 end
