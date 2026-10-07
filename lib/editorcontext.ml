@@ -58,7 +58,7 @@ let load_buffer text = (* State is stored.State passing *)
             let b = Stdlib.Buffer.create 256 in
             let () = Stdlib.Buffer.add_string b text
             in
-            let _ = log_m "Buffer contents %s"
+            let _ = log_m "Editor context Buffer contents [%s]"
                 (Stdlib.Buffer.contents b) in
             let var =
             {
@@ -68,5 +68,4 @@ let load_buffer text = (* State is stored.State passing *)
             } in
            EditorState.run ( EditorState.load_buffer var )
 
-  let get () = EditorState.get
 end

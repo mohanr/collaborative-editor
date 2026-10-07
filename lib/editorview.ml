@@ -97,13 +97,12 @@ let render (area : Area.t) ?( custom_formatter = Format.std_formatter) (buf : t)
        let new_location = ref { x = 6; y = 11 ;  } in (* Hard-coded for now *)
        Buffer.add_string b (Terminal.Cursor.set_cursor_position new_location );
        Buffer.add_string b
-         (match EditorState.get() with
-          |{ next = { cursor_position = _;
-             buf =  b;
-             holder = h}} -> let _ = log_m "Buffer contents %s"
-                                 (Buffer.contents b) in
-                                 (Buffer.contents b)
-         );
+       (match EditorState.get() with
+       | { next = { buf = b; _ } } ->
+           let text = Buffer.contents b in
+           let _ = log_m "Editor view Buffer contents [%s]" text in
+           text
+       );
        b
 
 

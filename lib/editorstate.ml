@@ -27,8 +27,10 @@ let load_buffer var (state : state) =
           {  cursor_position = _;
              buf =  b1;
              holder = _;} ->
+            let b = Stdlib.Buffer.create 256 in
+            let () = Stdlib.Buffer.add_string b (Buffer.contents b1) in
       {
-         var with buf = let () = Stdlib.Buffer.add_buffer b b1 in
+         var with buf =
                         b
       } in
       let new_state = { next = new_var } in
@@ -69,7 +71,7 @@ let run f =
           |{ next = { cursor_position = _;
              buf =  b;
              holder = _;}} ->
-            let _ = log_m "Buffer contents %s" (Buffer.contents b) in
+            let _ = log_m "run Buffer contents %s" (Buffer.contents b) in
             () in
     new_view
 end

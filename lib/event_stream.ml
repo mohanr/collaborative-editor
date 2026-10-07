@@ -14,7 +14,7 @@ module type STREAMER = sig
     val handle_event : Eio.Switch.t -> unit
 end
 
-type _ Effect.t += ShowContent : string ->  unit Effect.t
+type _ Effect.t += ShowContent : doc ->  unit Effect.t
 
 (*  TODO Make this reusable*)
 module Ed : sig
@@ -40,40 +40,44 @@ module EventStream :  STREAMER= struct
      Ed.load_buffer data
 
 
-let insert_local_doc c =
-    let new_doc = make() in
-    insert new_doc "Text" 1 c
+let insert_local_doc i new_doc c =
+    insert new_doc "Text" i c
 
   (* Effects for events/keystrokes *)
- let update_contents (f : (key Eio.Stream.t -> key )) s =
-   let open Core in
+ let update_contents  doc (f : (key Eio.Stream.t -> key )) s =
    match f s  with
               | `ASCII c ->
-                 let _ = log_m " Event picked up %c"  c in
-                 let doc = insert_local_doc  (Char.escaped c) in
-                let merged_text =
-                  List.map doc.doc_content ~f:(fun item -> item.content)
-                  |> String.concat ~sep:" "
-                in
-                 Effect.perform (ShowContent merged_text )
+                 (* let _ = log_m " Event picked up %c"  c in *)
 
-  let handle_event sw =
-  let _ = log_m " handle_event"  in
+                 let doc = insert_local_doc ((List.length doc.doc_content ) + 1) doc (Char.escaped c) in
+                 Effect.perform (ShowContent doc )
 
+let handle_event sw =
+    let _ = log_m " handle_event"  in
+    let open Core in
+
+    let new_doc = make() in     (* Create 'doc' once *)
        Fiber.fork ~sw
          (fun () ->
-          let rec loop () =
-              (try
-              (match  (update_contents  Eio.Stream.take  stream) with
+          let rec loop doc  =
+           let v =
+              try
+              (match  (update_contents  doc Eio.Stream.take  stream) with
               | effect ShowContent v, _k ->
-                    let _new_view = update_data_in_buffer v in
+                let merged_text =
+                  List.map v.doc_content ~f:(fun item -> item.content)
+                  |> String.concat ~sep:""
+                  in
+                    let _new_view = update_data_in_buffer merged_text  in
                     render();
-                    Fiber.yield ()
-              | key -> ());
-               with End_of_file -> ()
-                  | exn -> let _ = log_m "%s" (Printexc.to_string exn) in ());
-               loop ()
+                    Fiber.yield ();
+                    v
+              | key -> doc)
+               with End_of_file -> doc
+                  | exn -> let _ = log_m "%s" (Exn.to_string exn) in doc
+            in
+            loop v (* v is out of scope *)
           in
-          loop ()
+          loop new_doc
          )
 end
