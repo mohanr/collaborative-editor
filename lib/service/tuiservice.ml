@@ -2,6 +2,8 @@ open Service
 open Eio.Std
 open Tuioperator
 open Crdt
+open Logger.Logger
+
 
 let secret_key = `Ephemeral
 
@@ -10,13 +12,8 @@ module TuiService = struct
 module Make( TUIOp: TUIHandler) = struct
 
 module RemoteMergeOp = MergeService(CRDTOp)
-let start_server  (net : Eio_unix.Net.t ) env listen_address file_path id =
+let start_server  (net : Eio_unix.Net.t ) env listen_address file_path _id =
   Eio.Switch.run (fun sw ->
-(*   Printf.printf fmt *)
-(*     (match listen_address with *)
-(*                      | `TCP (_s,i) ->  Int.to_string i *)
-(*                      |  _ -> "Ok" ); *)
-(* (\* try *\) *)
 
   let config = Capnp_rpc_unix.Vat_config.create ~serve_tls:false ~secret_key ~net listen_address in
   let service_id = Capnp_rpc_unix.Vat_config.derived_id config "main" in
@@ -28,7 +25,7 @@ let start_server  (net : Eio_unix.Net.t ) env listen_address file_path id =
   (match Capnp_rpc_unix.Cap_file.save_service vat service_id file_path with
   | Error `Msg m -> failwith m
   | Ok () ->
-    traceln "Server running. Connect using %S." file_path;
+    let _ = log_m "Server running. Connect using %S." file_path in ();
   );
   TUIOp.periodic_timer env;
   try

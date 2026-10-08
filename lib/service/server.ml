@@ -15,14 +15,14 @@ type single_node = {
 let snowflake_id = ref 0
 module type Node = Configurer_intf.Node
 
-let create_config_node env no  : (module Node)=
+let create_config_node env no cap_file_id  : (module Node)=
 
 let node = create_snowflake_node (Int64.of_int 0) in
  let cap_id_map =
   let rec loop_while  i map =
     if i < no then(
       let path = ( "/Users/anu/Documents/rays/collaborative-editor/lib/mergedoc/"
-                   ^ ( Int.to_string i) ^ ".cap") in
+                   ^ ( Int.to_string cap_file_id ) ^ ".cap") in
         let id = generate node in
         let map = EntryMap.add
          (match id with | Ok v ->  snowflake_id := Int64.to_int v;
@@ -45,14 +45,13 @@ let node = create_snowflake_node (Int64.of_int 0) in
   (module Config_node: Node )
 
 let  new_cluster no_of_nodes env sw la cap_file_id =
-   let n = create_config_node env no_of_nodes in
+   let n = create_config_node env no_of_nodes cap_file_id in
    let module Config_Node = (val n  : Configurer_intf.Node)  in
 
    let listen_address = [`TCP ("127.0.0.1", (int_of_string la)) ] in
 
-   let _ = log_m "[%s]" la in
    let list_of_servers =
-   let rec loop_while la p i =
+   let rec loop_while lad p i =
 
     if i < no_of_nodes then(
       let path = ( "/Users/anu/Documents/rays/collaborative-editor/lib/mergedoc/" ^ ( Int.to_string cap_file_id ) ^ ".cap") in
@@ -61,16 +60,21 @@ let  new_cluster no_of_nodes env sw la cap_file_id =
 
       let module TuiService = TuiService.Make(TUIOp) in
       Fiber.fork_daemon ~sw ( fun () ->
-          ignore(TuiService.start_server  env#net env  (List.nth la i) path
+           let _ = log_m "[%s %d]" la no_of_nodes in
+          ignore(TuiService.start_server  env#net env  (List.nth lad i) path
                    (match (reverse path Config_Node.cap_id_map ) with
                     | Some k -> k
-                    |None -> failwith "Wrong snowflake Id"));
+                    |None ->
+                      List.iter (fun  (k, v) ->
+                        Printf.printf "Wrong cap file name/path %d %s" k v
+                          ;) ( EntryMap.bindings Config_Node.cap_id_map);
+                             failwith "Wrong cap file name/path"));
           `Stop_daemon
 
       );
       (* Printf.printf "\nNode %d\n" i; *)
 
-      loop_while la ( p @ [path]) (i + 1)
+      loop_while lad ( p @ [path]) (i + 1)
     )
     else p
    in
@@ -85,18 +89,30 @@ let  new_cluster no_of_nodes env sw la cap_file_id =
 
 let run_client _env service =
   let open Crdtclient.Client in
+  let open Crdt in
   (* TODO LET* *)
-  let _ = mergedoc service in
-  Printf.printf "Client invoked RPC\n%!" ;
+  let _ = mergedoc service !CRDTOp.Crdt_buffer.doc_content_store in
+  let _ = log_m "Client invoked RPC\n%!" in ();
 
   Lwt.return_unit
 
 let connect net env uri sw =
+  try
   (* Switch.run @@ fun sw -> *)
+  let _ = log_m "Trying to Connect " in
   let client_vat = Capnp_rpc_unix.client_only_vat ~sw net in
   let sr = Capnp_rpc_unix.Vat.import_exn client_vat uri in
-  Capnp_rpc_unix.with_cap_exn sr (fun cap -> Lwt_eio.run_lwt ( fun () -> run_client env cap))
-
+  Capnp_rpc_unix.with_cap_exn sr (fun cap -> Lwt_eio.run_lwt
+                                     ( fun () -> run_client env cap))
+  ;
+  let _ = log_m "Connected " in ()
+   with
+     | Eio.Cancel.Cancelled _exception as exn ->
+                                            let _ = log_m "Connect failure(Eio) "
+                                            in ();  raise exn
+     | Lwt.Canceled ->
+      let _ = log_m "Connect failure (Lwt)" in
+      raise Lwt.Canceled
 (* This is  temporary logic to connect to the only other replica. *)
 (* If '0.cap'  is the current 'cap' file, connect using '1.cap' which *)
 (* is the other replica's file . The number '0' or '1' is passed using *)
@@ -124,6 +140,7 @@ let boot_server listen_address cap_file_id =
   let rec loop_while  i  =
   let t = Timedesc.Span.make  ~s:30L () in
   Eio.Time.sleep (Eio.Stdenv.clock env) (Timedesc.Span.to_float_s t) ;
+  let _ = log_m "Trying to Connect " in
   if i < new_cluster.no_of_nodes then(
       let _ = connect env#net env
        (match (get_url (get_replica_cap_file cap_file_id )) with

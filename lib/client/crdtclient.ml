@@ -1,20 +1,20 @@
 open Service
+open Logger.Logger
 (* https://www.youtube.com/watch?v=HNLSyxN-rPE *)
-open Merge
 
 module MergeApi = Merge.MakeRPC(Capnp_rpc_lwt)
 
 module Client = struct
-let mergedoc service =
+let mergedoc service doc =
          let open Lwt.Infix in
          let open MergeApi.Reader in
-         let result = MergeClient.mergedoc service [] in
+         let result = MergeClient.mergedoc service doc in
          result >>=fun reply ->
          (* let l =  (reply :> (Merge.rw, 'a, 'b) Capnp__InnerArray.t) in *)
-
-         let _ = Capnp.Array.fold reply  ~init:[]
+         let (item_list, version) = reply in
+         let _ = Capnp.Array.fold item_list~init:[]
                     ~f:(fun acc i ->
-                        Printf.printf "%s" (Item.content_get i);
+                        let _ = log_m "Result from remote merge %s" (Item.content_get i) in
                         (Item.content_get i) :: acc
                      )   in
          Lwt.return_unit

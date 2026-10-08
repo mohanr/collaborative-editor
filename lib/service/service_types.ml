@@ -18,7 +18,7 @@ module EntryMap = CCMap.Make(CapIdEntry)
 type url_map = string EntryMap.t
 
 let reverse v t =
-  EntryMap.fold (fun k v' acc -> if (String.compare v  v' == 0) then Some k else acc) t None
+  EntryMap.fold (fun k v' acc -> if (String.compare v  v' = 0) then Some k else acc) t None
 let get_url cap_file =
   try
     let ch = open_in cap_file in

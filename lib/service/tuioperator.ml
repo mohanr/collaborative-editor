@@ -57,6 +57,7 @@ let receive_event flow sw =
                  Fiber.yield ();
                  loop_while_event ();
                with End_of_file -> ()
+                  | Eio.Cancel.Cancelled _ as exn -> raise exn
                   | exn -> let _ = log_m "%s" (Printexc.to_string exn) in ()
              in
              loop_while_event ()
@@ -85,12 +86,16 @@ let run env =
   )
   (fun () ->
     let rec loop () =
+      try
       await_timeout cond;
       receive_event eio_stdin sw;
       flush stdout;
       Fiber.yield ();
       loop ()
-    in
+       with
+         | Eio.Cancel.Cancelled _ as exn -> raise exn
+         | exn -> let _ = log_m "%s" (Printexc.to_string exn) in ()
+      in
     loop ()
   )
 
