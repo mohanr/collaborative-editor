@@ -1,7 +1,4 @@
 open Eio.Std
-open Event
-open Terminal.Terminal
-open Types
 open Widget
 open Event_stream
 open Logger.Logger
@@ -20,9 +17,6 @@ module TUIOperator = struct
 
 let unpaused = ref (Promise.create_resolved ())
 
-let await_timeout timeout_mutex =
-    Eio.Condition.await_no_mutex timeout_mutex
-
 let get_flow_buffer flow ~max_size  =
    Eio.Buf_read.of_flow flow ~max_size
 (* https://github.com/ocaml-community/lambda-term/blob/master/src/lTerm.ml *)
@@ -31,7 +25,6 @@ let parse p buf =
                                       (* and each character is read *)
 
 let message =
-        let open Eio.Buf_read.Syntax in
         let msg = Eio.Buf_read.uint8 in
          msg
 
@@ -67,7 +60,6 @@ let receive_event flow sw =
 let run env =
    let _ = log_m "periodic timer " in
    Eio.Switch.run @@ fun sw ->
-   let cond = Eio.Condition.create () in
    let clock = Eio.Stdenv.clock env in
 
    Renderer.render();
@@ -77,27 +69,23 @@ let run env =
    (* EventStream.handle_event sw; *)
 
    let eio_stdin = get_eio_stdin env in
-   Fiber.both  (fun () ->
+   receive_event eio_stdin sw;
+   try
      while true do
         Promise.await !unpaused;
-        Eio.Condition.broadcast cond;
         Eio.Time.sleep clock 3.5;
-      done
-  )
-  (fun () ->
-    let rec loop () =
-      try
-      await_timeout cond;
-      receive_event eio_stdin sw;
-      flush stdout;
-      Fiber.yield ();
-      loop ()
-       with
-         | Eio.Cancel.Cancelled _ as exn -> raise exn
-         | exn -> let _ = log_m "%s" (Printexc.to_string exn) in ()
-      in
-    loop ()
-  )
+        flush stdout;
+        let _ = log_m "Timer ticks" in
+        ()
+     done
+   with
+     | Eio.Cancel.Cancelled _ as exn ->
+          let _ = log_m "Timer ticks stop (Lwt)" in
+          raise exn
+     | Lwt.Canceled ->
+          let _ = log_m "Timer ticks stop (Lwt)" in
+          raise Lwt.Canceled
+     | exn -> let _ = log_m "%s" (Printexc.to_string exn) in ()
 
 let change_mode ()=
      let enable_raw_mode () =

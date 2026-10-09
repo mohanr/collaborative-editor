@@ -96,11 +96,12 @@ let run_client _env service =
   (* TODO LET* *)
   let* items =
     mergedoc service !CRDTOp.Crdt_buffer.doc_content_store in
-    Lwt.return
+    let merged_items =
     (List.map items ~f:(fun item ->
-                  let _ = log_m "Client invoked RPC %s\n" item in ();
                   item)
-                  |> String.concat ~sep:"")
+                  |> String.concat ~sep:"") in
+     let _ = log_m "Client invoked RPC and received %s\n" merged_items in
+    in Lwt.return merged_items
 
 let connect net env uri sw =
   try

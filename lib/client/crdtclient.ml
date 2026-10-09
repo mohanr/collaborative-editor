@@ -14,7 +14,6 @@ let mergedoc service doc =
          let (item_list, version) = reply in
          let items = Capnp.Array.fold item_list~init:[]
                     ~f:(fun acc i ->
-                        let _ = log_m "Result from remote merge %s" (Item.content_get i) in
                         (Item.content_get i) :: acc
                      )   in
          Lwt.return items
