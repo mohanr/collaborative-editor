@@ -12,6 +12,7 @@ type single_node = {
 }
 [@@deriving_show]
 
+
 let snowflake_id = ref 0
 module type Node = Configurer_intf.Node
 
@@ -60,7 +61,7 @@ let  new_cluster no_of_nodes env sw la cap_file_id =
 
       let module TuiService = TuiService.Make(TUIOp) in
       Fiber.fork_daemon ~sw ( fun () ->
-           let _ = log_m "[%s %d]" la no_of_nodes in
+           let _ = log_m "[%s %d]" la cap_file_id in
           ignore(TuiService.start_server  env#net env  (List.nth lad i) path
                    (match (reverse path Config_Node.cap_id_map ) with
                     | Some k -> k
@@ -90,11 +91,16 @@ let  new_cluster no_of_nodes env sw la cap_file_id =
 let run_client _env service =
   let open Crdtclient.Client in
   let open Crdt in
+  let open Lwt.Syntax in
+  let open Core in
   (* TODO LET* *)
-  let _ = mergedoc service !CRDTOp.Crdt_buffer.doc_content_store in
-  let _ = log_m "Client invoked RPC\n%!" in ();
-
-  Lwt.return_unit
+  let* items =
+    mergedoc service !CRDTOp.Crdt_buffer.doc_content_store in
+    Lwt.return
+    (List.map items ~f:(fun item ->
+                  let _ = log_m "Client invoked RPC %s\n" item in ();
+                  item)
+                  |> String.concat ~sep:"")
 
 let connect net env uri sw =
   try
@@ -102,10 +108,10 @@ let connect net env uri sw =
   let _ = log_m "Trying to Connect " in
   let client_vat = Capnp_rpc_unix.client_only_vat ~sw net in
   let sr = Capnp_rpc_unix.Vat.import_exn client_vat uri in
-  Capnp_rpc_unix.with_cap_exn sr (fun cap -> Lwt_eio.run_lwt
-                                     ( fun () -> run_client env cap))
-  ;
-  let _ = log_m "Connected " in ()
+  Capnp_rpc_unix.with_cap_exn  sr (fun cap -> Lwt_eio.run_lwt
+                                (let merged_content= run_client env cap in
+                                (fun () -> merged_content)));
+
    with
      | Eio.Cancel.Cancelled _exception as exn ->
                                             let _ = log_m "Connect failure(Eio) "
@@ -138,11 +144,12 @@ let boot_server listen_address cap_file_id =
   let t = Timedesc.Span.make  ~s:95L () in
   Eio.Time.sleep (Eio.Stdenv.clock env) (Timedesc.Span.to_float_s t) ;
   let rec loop_while  i  =
+  if i < new_cluster.no_of_nodes then(
   let t = Timedesc.Span.make  ~s:30L () in
   Eio.Time.sleep (Eio.Stdenv.clock env) (Timedesc.Span.to_float_s t) ;
-  let _ = log_m "Trying to Connect " in
-  if i < new_cluster.no_of_nodes then(
-      let _ = connect env#net env
+  let _ = log_m "Connect to %d for %d " new_cluster.no_of_nodes cap_file_id in
+      let _merged_content = connect env#net env (* Initial call used to hold *)
+                                                   (* the connection. *)
        (match (get_url (get_replica_cap_file cap_file_id )) with
          | `Error _ -> failwith "Error in Uri.t"
          | `Ok o -> o) sw in
@@ -150,4 +157,5 @@ let boot_server listen_address cap_file_id =
   in
   loop_while 0;
   (* Eio.Switch.fail sw (Failure "Normal test cancellation"); *)
+  Eio.Fiber.await_cancel ()
   )

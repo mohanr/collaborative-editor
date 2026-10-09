@@ -12,12 +12,12 @@ let mergedoc service doc =
          result >>=fun reply ->
          (* let l =  (reply :> (Merge.rw, 'a, 'b) Capnp__InnerArray.t) in *)
          let (item_list, version) = reply in
-         let _ = Capnp.Array.fold item_list~init:[]
+         let items = Capnp.Array.fold item_list~init:[]
                     ~f:(fun acc i ->
                         let _ = log_m "Result from remote merge %s" (Item.content_get i) in
                         (Item.content_get i) :: acc
                      )   in
-         Lwt.return_unit
+         Lwt.return items
 
 
 end
