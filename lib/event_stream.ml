@@ -1,4 +1,5 @@
 open Eio.Std
+open Service_types
 open Logger.Logger
 open Tui_types
 open Crdt.CRDTOp.Crdt_buffer
@@ -11,7 +12,8 @@ open Editorcontext
 
 module type STREAMER = sig
     val get_event_stream : unit -> key Eio.Stream.t
-    val handle_event : Eio.Switch.t -> unit
+    val handle_event : Eio_unix.Stdenv.base ->Eio.Switch.t -> unit
+    val cap_file_id : int ref
 end
 
 type _ Effect.t += ShowContent : doc ->  unit Effect.t
@@ -31,13 +33,55 @@ module B = Buffer(A)
 module BF = BufferManipulator (C) (B)
 
 module EventStream :  STREAMER= struct
+  let cap_file_id = ref (-1)
   let stream = Eio.Stream.create 20 (* Configure *)
 
   let get_event_stream() =
     stream
 
-  let update_data_in_buffer data =
-     Ed.load_buffer data
+let run_client _env service =
+  let open Crdtclient.Client in
+  let open Crdt in
+  let open Lwt.Syntax in
+  let open Core in
+  (* TODO LET* *)
+  let* items =
+    mergedoc service !CRDTOp.Crdt_buffer.doc_content_store in
+    let merged_items =
+    (List.map items ~f:(fun item ->
+                  item)
+                  |> String.concat ~sep:"") in
+     let _ = log_m "Client invoked RPC and received %s\n" merged_items in
+     Lwt.return merged_items
+
+let connect net env uri sw =
+  try
+  (* Switch.run @@ fun sw -> *)
+  let _ = log_m "Trying to Connect " in
+  let client_vat = Capnp_rpc_unix.client_only_vat ~sw net in
+  let sr = Capnp_rpc_unix.Vat.import_exn client_vat uri in
+  Capnp_rpc_unix.with_cap_exn  sr (fun cap -> Lwt_eio.run_lwt
+                                (let merged_content= run_client env cap in
+                                (fun () -> merged_content)));
+
+   with
+     | Eio.Cancel.Cancelled _exception as exn ->
+                                            let _ = log_m "Connect failure(Eio) "
+                                            in ();  raise exn
+     | Lwt.Canceled ->
+      let _ = log_m "Connect failure (Lwt)" in
+      raise Lwt.Canceled
+
+
+  let update_data_in_buffer data ~env ~sw =
+     let view = Ed.load_buffer data in(* Local replica's data *)
+      let merged_content = connect env#net env (* Initial call used to hold *)
+                                                   (* the connection. *)
+       (match (get_url (get_replica_cap_file !cap_file_id )) with
+         | `Error _ -> failwith "Error in Uri.t"
+         | `Ok o -> o) sw in
+
+     Ed.load_buffer merged_content (* Merged data *)
 
 
 let insert_local_doc i new_doc c =
@@ -52,7 +96,7 @@ let insert_local_doc i new_doc c =
                  let doc = insert_local_doc ((List.length doc.doc_content ) + 1) doc (Char.escaped c) in
                  Effect.perform (ShowContent doc )
 
-let handle_event sw =
+let handle_event env sw =
     let _ = log_m " handle_event"  in
     let open Core in
 
@@ -68,7 +112,7 @@ let handle_event sw =
                   List.map v.doc_content ~f:(fun item -> item.content)
                   |> String.concat ~sep:""
                   in
-                    let _new_view = update_data_in_buffer merged_text  in
+                    let _new_view = update_data_in_buffer merged_text ~env ~sw in
                     render();
                     Fiber.yield ();
                     v

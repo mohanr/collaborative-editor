@@ -1,5 +1,4 @@
 open Service
-open Logger.Logger
 (* https://www.youtube.com/watch?v=HNLSyxN-rPE *)
 
 module MergeApi = Merge.MakeRPC(Capnp_rpc_lwt)
@@ -11,7 +10,7 @@ let mergedoc service doc =
          let result = MergeClient.mergedoc service doc in
          result >>=fun reply ->
          (* let l =  (reply :> (Merge.rw, 'a, 'b) Capnp__InnerArray.t) in *)
-         let (item_list, version) = reply in
+         let (item_list, _version) = reply in
          let items = Capnp.Array.fold item_list~init:[]
                     ~f:(fun acc i ->
                         (Item.content_get i) :: acc

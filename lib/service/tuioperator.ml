@@ -63,7 +63,7 @@ let run env =
    let clock = Eio.Stdenv.clock env in
 
    Renderer.render();
-   EventStream.handle_event sw;
+   EventStream.handle_event env sw;
 
    let _view = Ed.init_state "" in
    (* EventStream.handle_event sw; *)

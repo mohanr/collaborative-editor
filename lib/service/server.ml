@@ -16,6 +16,7 @@ type single_node = {
 let snowflake_id = ref 0
 module type Node = Configurer_intf.Node
 
+
 let create_config_node env no cap_file_id  : (module Node)=
 
 let node = create_snowflake_node (Int64.of_int 0) in
@@ -45,10 +46,10 @@ let node = create_snowflake_node (Int64.of_int 0) in
   end in
   (module Config_node: Node )
 
+
 let  new_cluster no_of_nodes env sw la cap_file_id =
    let n = create_config_node env no_of_nodes cap_file_id in
    let module Config_Node = (val n  : Configurer_intf.Node)  in
-
    let listen_address = [`TCP ("127.0.0.1", (int_of_string la)) ] in
 
    let list_of_servers =
@@ -101,7 +102,7 @@ let run_client _env service =
                   item)
                   |> String.concat ~sep:"") in
      let _ = log_m "Client invoked RPC and received %s\n" merged_items in
-    in Lwt.return merged_items
+     Lwt.return merged_items
 
 let connect net env uri sw =
   try
@@ -120,22 +121,10 @@ let connect net env uri sw =
      | Lwt.Canceled ->
       let _ = log_m "Connect failure (Lwt)" in
       raise Lwt.Canceled
-(* This is  temporary logic to connect to the only other replica. *)
-(* If '0.cap'  is the current 'cap' file, connect using '1.cap' which *)
-(* is the other replica's file . The number '0' or '1' is passed using *)
-(* Cmdliner *)
-let get_replica_cap_file cap_file_id  =
-  match cap_file_id  with
-  | x when x = 0 ->
-      "/Users/anu/Documents/rays/collaborative-editor/lib/mergedoc/"
-      ^ ( Int.to_string 1 ) ^ ".cap"
-  | x when x = 1 ->
-      "/Users/anu/Documents/rays/collaborative-editor/lib/mergedoc/"
-      ^ ( Int.to_string 0 ) ^ ".cap"
-  | _  -> failwith "Incorrectly configured cap file path"
-
 
 let boot_server listen_address cap_file_id =
+  let open Event_stream in
+  EventStream.cap_file_id := cap_file_id; (* CONNECT using this again in another fibre *)
   Eio_main.run @@ fun env ->
   Lwt_eio.with_event_loop ~clock:(Eio.Stdenv.clock env) @@ fun () ->
   Eio.Switch.run (fun sw ->
