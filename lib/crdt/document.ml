@@ -22,17 +22,24 @@ let check_version1 id version =
 let check_veracity_of_insertion item doc_content =
    let agent = get_agent item.id in
    let seq = get_seq  item.id in
+   let contains_id id =
+     List.exists
+       (fun existing -> compare_identity existing.id id = 0)
+       doc_content.doc_content
+   in
  not (check_version1 item.id doc_content.version) &&
  (seq = 0 || check_version1 {agent = Some agent; seq = Some (seq - 1) }
                            doc_content.version)
- (* Left and Right should be present already *)
-
+ (* A version vector only says that this replica has seen a sequence number.
+    The insertion algorithm needs the actual boundary item in its list.  In
+    particular, accepting an origin merely because a later sequence number is
+    present lets an item be inserted at the wrong index after an RPC merge. *)
  && (match item.origin_left with
     | None -> true
-    | Some _ -> check_version1 (get_identity item.origin_left) doc_content.version)
+    | Some id -> contains_id id)
  && (match item.origin_right with
     | None -> true
-    | Some _ -> check_version1 (get_identity item.origin_right) doc_content.version)
+    | Some id -> contains_id id)
 
 let increment agent seq l1  =
 let current_max = VersionMap.find_opt agent l1.version |> Option.value ~default:(-1) in
@@ -104,5 +111,7 @@ let merge_both  src_content dest_content =
        )
 
 let remote_merge_both  src_content =
-      merge_both  src_content !CRDTOp.Crdt_buffer.doc_content_store
+      let doc = merge_both  src_content !CRDTOp.Crdt_buffer.doc_content_store in
+      CRDTOp.Crdt_buffer.doc_content_store := doc;
+      doc
 end

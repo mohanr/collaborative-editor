@@ -41,23 +41,21 @@ module EventStream :  STREAMER= struct
 
 let run_client _env service =
   let open Crdtclient.Client in
-  let open Crdt in
   let open Lwt.Syntax in
   let open Core in
-  (* TODO LET* *)
-  let* items =
-    mergedoc service !CRDTOp.Crdt_buffer.doc_content_store in
-    let merged_items =
-    (List.map items ~f:(fun item ->
-                  item)
-                  |> String.concat ~sep:"") in
-     let _ = log_m "Client invoked RPC and received %s\n" merged_items in
-     Lwt.return merged_items
+  let* merged_doc =
+    mergedoc_doc service !doc_content_store in
+    doc_content_store := merged_doc;
+  let merged_items =
+    List.map merged_doc.doc_content ~f:(fun item -> item.content)
+    |> String.concat ~sep:""
+  in
+  let _ = log_m "Client received merged document [%s]\n" merged_items in
+  Lwt.return merged_doc
 
 let connect net env uri sw =
   try
   (* Switch.run @@ fun sw -> *)
-  let _ = log_m "Trying to Connect " in
   let client_vat = Capnp_rpc_unix.client_only_vat ~sw net in
   let sr = Capnp_rpc_unix.Vat.import_exn client_vat uri in
   Capnp_rpc_unix.with_cap_exn  sr (fun cap -> Lwt_eio.run_lwt
@@ -74,18 +72,22 @@ let connect net env uri sw =
 
 
   let update_data_in_buffer data ~env ~sw =
-     let view = Ed.load_buffer data in(* Local replica's data *)
-      let merged_content = connect env#net env (* Initial call used to hold *)
+     let open Core in
+     let _view = Ed.load_buffer data in(* Local replica's data *)
+      let merged_doc = connect env#net env (* Initial call used to hold *)
                                                    (* the connection. *)
        (match (get_url (get_replica_cap_file !cap_file_id )) with
          | `Error _ -> failwith "Error in Uri.t"
          | `Ok o -> o) sw in
-
-     Ed.load_buffer merged_content (* Merged data *)
-
+     let merged_content =
+       List.map merged_doc.doc_content ~f:(fun item -> item.content)
+       |> String.concat ~sep:""
+     in
+     let _view = Ed.load_buffer merged_content in
+     merged_doc
 
 let insert_local_doc i new_doc c =
-    insert new_doc "Text" i c
+    insert new_doc ("Text-" ^ string_of_int !cap_file_id) i c
 
   (* Effects for events/keystrokes *)
  let update_contents  doc (f : (key Eio.Stream.t -> key )) s =
@@ -93,6 +95,9 @@ let insert_local_doc i new_doc c =
               | `ASCII c ->
                  (* let _ = log_m " Event picked up %c"  c in *)
 
+                 (* A background sync may have replaced the replica since the
+                    previous keypress. Insert into that current document. *)
+                 let doc = !doc_content_store in
                  let doc = insert_local_doc ((List.length doc.doc_content ) + 1) doc (Char.escaped c) in
                  Effect.perform (ShowContent doc )
 
@@ -112,10 +117,10 @@ let handle_event env sw =
                   List.map v.doc_content ~f:(fun item -> item.content)
                   |> String.concat ~sep:""
                   in
-                    let _new_view = update_data_in_buffer merged_text ~env ~sw in
+                    let merged_doc = update_data_in_buffer merged_text ~env ~sw in
                     render();
                     Fiber.yield ();
-                    v
+                    merged_doc
               | key -> doc)
                with End_of_file -> doc
                   | exn -> let _ = log_m "%s" (Exn.to_string exn) in doc

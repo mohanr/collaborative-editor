@@ -75,8 +75,8 @@ let run env =
         Promise.await !unpaused;
         Eio.Time.sleep clock 3.5;
         flush stdout;
-        let _ = log_m "Timer ticks" in
-        ()
+        (* let _ = log_m "Timer ticks" in *)
+        (* () *)
      done
    with
      | Eio.Cancel.Cancelled _ as exn ->

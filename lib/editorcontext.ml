@@ -16,6 +16,9 @@ type _ Effect.t += Set_cursor_blinking :  tui_editor_view   ->
 module EditorContext
                     ( EditorState : EState  ) = struct
 
+      let cursor_after_text text =
+        { x = 6; y = 11 + String.length text }
+
       (* Initial state in the state machine *)
       let init_state text =
         let effectful_init_state () =
@@ -27,7 +30,7 @@ module EditorContext
 
            Effect.perform (Set_cursor_blinking
                    {
-                       cursor_position = Some{ x = 6;y = 11 }; (* Should be Location *)
+                       cursor_position = Some (cursor_after_text text);
                        buf =  Stdlib.Buffer.create 256;
                        holder =  Textholder.make string_text ;
                    }) in
@@ -39,7 +42,7 @@ module EditorContext
                                 | Some l -> set_cursor_new_position {x=l.x;y=l.y}
                                 | None -> ()
                                 ) in
-                                let _ = log_m "Set cursor blinking" in
+                                (* let _ = log_m "Set cursor blinking" in *)
                                 let () = set_cursor_blinking() in
                                 v
         | state-> state
@@ -62,7 +65,7 @@ let load_buffer text = (* State is stored.State passing *)
                 (Stdlib.Buffer.contents b) in
             let var =
             {
-                cursor_position = Some{ x = 6;y = 11 };
+                cursor_position = Some (cursor_after_text text);
                 buf =  b ;
                 holder =  Textholder.make string_text ;
             } in

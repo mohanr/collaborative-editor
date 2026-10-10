@@ -53,6 +53,12 @@ let%expect_test "Insert one character"=
 let insert  new_doc  pos c =
      insert new_doc "Text" pos c
 
+let text_of doc =
+  List.map doc.doc_content ~f:(fun item -> item.content)
+  |> String.concat ~sep:""
+
+
+
 let%expect_test "Merge two documents"=
     let new_doc = make() in
     let new_doc = insert new_doc 1 "a" in

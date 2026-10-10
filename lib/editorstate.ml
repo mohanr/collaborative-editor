@@ -2,7 +2,7 @@ open Types
 open Stdlib
 open Textholder
 open Tui_types
-
+open Logger.Logger
 
 module EditorState  = struct
 
@@ -19,22 +19,25 @@ module EditorState  = struct
   let set state =  state_store   := state
 
 let load_buffer var (state : state) =
-    let new_var =
-     match !state_store, var with
+  let new_state =
+     match state, var with
           |{ next = { cursor_position = _;
              buf =  b;
              holder = _;}} ,
           {  cursor_position = _;
              buf =  b1;
              holder = _;} ->
-            let b = Stdlib.Buffer.create 256 in
-            let () = Stdlib.Buffer.add_string b (Buffer.contents b1) in
-      {
-         var with buf =
-                        b
-      } in
-      let new_state = { next = new_var } in
-      (new_var, new_state)
+            let _ = log_m "Editor state Buffer contents store [%s] new content [%s]"
+                (Stdlib.Buffer.contents b)
+                (Stdlib.Buffer.contents b1) in
+            let b =  Stdlib.Buffer.create 256 in
+            let () = Stdlib.Buffer.add_string b (Buffer.contents b1)
+            in
+             let new_var =
+               {
+                  var with buf = b
+               } in
+               (new_var,  { next = new_var }) in new_state
 
 (* Probably buffer size change after creation *)
 let make_buffer var (state : state) =
@@ -67,13 +70,13 @@ let run f =
     let open Logger.Logger in
     let new_view, state =  bind f  ~f:return !state_store  in
     state_store := state;
-    let _ = match state with
+     match state with
           |{ next = { cursor_position = _;
              buf =  b;
              holder = _;}} ->
-            let _ = log_m "run Buffer contents %s" (Buffer.contents b) in
-            () in
-    new_view
+            (* let _ = log_m "run Buffer contents %s" (Buffer.contents b) in *)
+            (* () in *)
+            new_view
 end
 
 module type EState =sig

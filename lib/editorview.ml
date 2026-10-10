@@ -103,6 +103,12 @@ let render (area : Area.t) ?( custom_formatter = Format.std_formatter) (buf : t)
            let _ = log_m "Editor view Buffer contents [%s]" text in
            text
        );
+       (match EditorState.get() with
+       | { next = { cursor_position = Some location; _ } } ->
+           Buffer.add_string b
+             (Terminal.Cursor.set_cursor_position (ref location))
+       | { next = { cursor_position = None; _ } } -> ());
+       Buffer.add_string b (Terminal.ansi_escape_codes ()).text_cursor_enable;
        b
 
 

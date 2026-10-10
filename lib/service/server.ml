@@ -107,7 +107,6 @@ let run_client _env service =
 let connect net env uri sw =
   try
   (* Switch.run @@ fun sw -> *)
-  let _ = log_m "Trying to Connect " in
   let client_vat = Capnp_rpc_unix.client_only_vat ~sw net in
   let sr = Capnp_rpc_unix.Vat.import_exn client_vat uri in
   Capnp_rpc_unix.with_cap_exn  sr (fun cap -> Lwt_eio.run_lwt

@@ -63,7 +63,7 @@ let merge_local =
                         origin_right =
                                             (
                                              match IdentityU.Message.get (IdentityU.message_get
-                                                                           (Item.originleft_get i)) with
+                                                                           (Item.originright_get i)) with
                                                 IdentityU.Message.Someidentity identity ->
                                                    Some(
                                                      {
@@ -89,6 +89,7 @@ let merge_local =
                         deleted = false; (* Not used now *)
                       }
                      :: acc) [] item_list
+                    |> List.rev
         in il
       in
       let item_list = extract_item (Params.itemlist_get_list params) in
@@ -138,33 +139,33 @@ let merge_local =
                                           let a = Identity.agent_init some_idu in
                                           let au = AgentU.message_init a in
                                           let () =
-                                            (match item.id.agent with
+                                            (match v.agent with
                                               |None -> AgentU.Message.noneagent_set au
                                               |Some agent ->  AgentU.Message.someagent_set au agent ) in
                                           let s = Identity.seq_init some_idu in
                                           let su = SeqU.message_init s in
                                           let () =
-                                            (match item.id.seq with
+                                            (match v.seq with
                                               |None -> SeqU.Message.noneseq_set su
                                               |Some seq -> SeqU.Message.someseq_set_exn su seq ) in ()
 
                               ) in
-                              let or_r = Item.originleft_init  allocated_i  in
+                              let or_r = Item.originright_init  allocated_i  in
                               let idu_r = IdentityU.message_init or_r in
                               let () =
                                (match item.origin_right with
                               | None -> IdentityU.Message.noneidentity_set idu_r
-                              | Some v -> let some_idu = IdentityU.Message.someidentity_init idu in
+                              | Some v -> let some_idu = IdentityU.Message.someidentity_init idu_r in
                                           let a = Identity.agent_init some_idu in
                                           let au = AgentU.message_init a in
                                           let () =
-                                            (match item.id.agent with
+                                            (match v.agent with
                                               |None -> AgentU.Message.noneagent_set au
                                               |Some agent ->  AgentU.Message.someagent_set au agent ) in
                                           let s = Identity.seq_init some_idu in
                                           let su = SeqU.message_init s in
                                           let () =
-                                            (match item.id.seq with
+                                            (match v.seq with
                                               |None -> SeqU.Message.noneseq_set su
                                               |Some seq -> SeqU.Message.someseq_set_exn su seq ) in ()
                               )
@@ -217,33 +218,33 @@ let mergedoc t doc =
                                           let a = Identity.agent_init some_idu in
                                           let au = AgentU.message_init a in
                                           let () =
-                                            (match item.id.agent with
+                                            (match v.agent with
                                               |None -> AgentU.Message.noneagent_set au
                                               |Some agent ->  AgentU.Message.someagent_set au agent ) in
                                           let s = Identity.seq_init some_idu in
                                           let su = SeqU.message_init s in
                                           let () =
-                                            (match item.id.seq with
+                                            (match v.seq with
                                               |None -> SeqU.Message.noneseq_set su
                                               |Some seq -> SeqU.Message.someseq_set_exn su seq ) in ()
 
                               ) in
-                              let or_r = Item.originleft_init  allocated_i  in
+                              let or_r = Item.originright_init  allocated_i  in
                               let idu_r = IdentityU.message_init or_r in
                               let () =
                                (match item.origin_right with
                               | None -> IdentityU.Message.noneidentity_set idu_r
-                              | Some v -> let some_idu = IdentityU.Message.someidentity_init idu in
+                              | Some v -> let some_idu = IdentityU.Message.someidentity_init idu_r in
                                           let a = Identity.agent_init some_idu in
                                           let au = AgentU.message_init a in
                                           let () =
-                                            (match item.id.agent with
+                                            (match v.agent with
                                               |None -> AgentU.Message.noneagent_set au
                                               |Some agent ->  AgentU.Message.someagent_set au agent ) in
                                           let s = Identity.seq_init some_idu in
                                           let su = SeqU.message_init s in
                                           let () =
-                                            (match item.id.seq with
+                                            (match v.seq with
                                               |None -> SeqU.Message.noneseq_set su
                                               |Some seq -> SeqU.Message.someseq_set_exn su seq ) in ()
                               )
@@ -257,5 +258,5 @@ let mergedoc t doc =
                            ) (VersionMap.bindings doc.version) ;
   Capability.call_for_value_exn t method_id request >|=fun response ->
    ( Merge.Results.itemlist_get response,
-     Merge.Results.doccontent_get_list)                   (* CCMap  *)
+     Merge.Results.doccontent_get_list response)          (* CCMap  *)
 end
