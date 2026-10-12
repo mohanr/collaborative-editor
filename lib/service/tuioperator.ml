@@ -87,26 +87,13 @@ let run env =
           raise Lwt.Canceled
      | exn -> let _ = log_m "%s" (Printexc.to_string exn) in ()
 
-let change_mode ()=
-     let enable_raw_mode () =
-       let stdin_fd = Unix.descr_of_in_channel stdin in
-       let termios = Unix.tcgetattr stdin_fd in
-       let new_termios =
-         Unix.
-           { termios with c_icanon = false; c_echo = false;
-                          c_vmin = 1; c_vtime = 0 ; c_opost =false }
-       in
-       Unix.tcsetattr stdin_fd Unix.TCSAFLUSH new_termios;
-       termios
-    in enable_raw_mode()
-
-
 let end_loop()  =
   Printf.printf "End loop"
 
 let periodic_timer env =
+  let open Terminal in
   Switch.run  @@ fun sw ->
-  let _ = change_mode () in
+  let _ = Terminal.change_mode () in
   Fiber.fork ~sw ( fun () -> run env  );
   ()
 

@@ -8,6 +8,7 @@ module type terminal_operations  = sig
     val ansi_escape_codes : unit -> ansi_escape_codes
     val get_out_channel: unit -> Unix.file_descr
     val get_in_channel: unit -> in_channel
+    val change_mode : unit -> Unix.terminal_io
 
   module Cursor : sig
     val hide_cursor  : unit -> string
@@ -19,6 +20,20 @@ end
 
 module Terminal                 (* consider adding a state monad *)
   : terminal_operations  = struct
+
+let change_mode ()=
+     let enable_raw_mode () =
+       let stdin_fd = Unix.descr_of_in_channel stdin in
+       let termios = Unix.tcgetattr stdin_fd in
+       let new_termios =
+         Unix.
+           { termios with c_icanon = false; c_echo = false;
+                          c_vmin = 1; c_vtime = 0 ; c_opost =false }
+       in
+       Unix.tcsetattr stdin_fd Unix.TCSAFLUSH new_termios;
+       termios
+    in enable_raw_mode()
+
 
 let get_out_channel() =
    let stdout_fd  = Unix.descr_of_out_channel stdout in
