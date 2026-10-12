@@ -1,6 +1,6 @@
-open Collaborative_editor.Crdt.CRDTOp.Crdt_buffer
 open Core
 open Collaborative_editor__Types
+open Collaborative_editor.Crdt.CRDTOp.Crdt_buffer
 open Collaborative_editor__Layout_configurer_intf
 
 let create_config_node () : (module Configurer)=
@@ -45,7 +45,6 @@ let%expect_test "Insert one character"=
     List.iter merged_content.doc_content ~f:(fun v ->
         Format.printf "%a" Sexp.pp_hum ([%sexp_of: item] v )) ;
     [%expect {|
-      There is no character at position 0
       ((content a) (id ((agent (Text)) (seq (0)))) (origin_left ())
        (origin_right ()) (deleted false))
       |}]
@@ -70,7 +69,6 @@ let%expect_test "Merge two documents"=
     List.iter new_doc1.doc_content ~f:(fun v ->
         Format.printf "%a" Sexp.pp_hum ([%sexp_of: item] v )) ;
     [%expect {|
-      There is no character at position 0
       ((content a) (id ((agent (Text)) (seq (0)))) (origin_left ())
        (origin_right ()) (deleted false))
       |}];
@@ -87,15 +85,8 @@ let%expect_test "Merge two documents"=
       assert (String.equal merged_text "c a b");
       Format.printf "\n%s" merged_text;
       [%expect {|
-        There is no character at position 1
-        Content ((content a) (id ((agent (Text)) (seq (0)))) (origin_left ())
-                 (origin_right ()) (deleted false))
-        ((content c)
-                                                     (id ((agent (Text)) (seq (2))))
-                                                     (origin_left ())
-                                                     (origin_right
-                                                      (((agent (Text)) (seq (0)))))
-                                                     (deleted false))
+        ((content c) (id ((agent (Text)) (seq (2)))) (origin_left ())
+         (origin_right (((agent (Text)) (seq (0))))) (deleted false))
         ((content a)
                                                                        (id
                                                                         ((agent
