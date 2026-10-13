@@ -84,7 +84,7 @@ let draw_vborder_in_buffer border width =
 
 
 (* https://ocaml.org/manual/5.0/api/Format_tutorial.html#1_Refinementonhovboxes *)
-module Widget( EditorView : Renderable.R ) = struct
+module Widget= struct
    type Format.stag += Highlight
 
    let tui_stag_functions (area : Types.Area.t) = {
@@ -180,8 +180,7 @@ let render_container(area : Types.Area.t) buf =
 
 end
 
- module E = EditorView
- module Wid = Widget(E)
+ module Wid = Widget
 module Renderer = struct
 
 let create_buffer()  =
