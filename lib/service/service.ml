@@ -106,7 +106,7 @@ let merge_local =
       let response, results = Service.Response.create
           MergeApi.Service.MergeDoc.Mergedoc.Results.init_pointer in
       (* Call the service *)
-      let doc = Document.Document.remote_merge_both (*  Nor RPC call *)
+      let doc = Document.Document.remote_merge_both (*  Not RPC call *)
                                                         (*  as this is the *)
                                                         (*  service.It takes *)
                                                         (*  a source doc(Replica 1) and gets *)

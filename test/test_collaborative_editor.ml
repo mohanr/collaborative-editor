@@ -1,32 +1,8 @@
 open Core
 open Collaborative_editor__Types
 open Collaborative_editor.Crdt.CRDTOp.Crdt_buffer
-open Collaborative_editor__Layout_configurer_intf
-
-let create_config_node () : (module Configurer)=
-
-  let module Config = struct
-
-   include MakeConfigurer
-   (* Default ? *)
-   let config = {
-
-    fallback = false;
-    nesting_level = 0;
-    linebuffer_count = 0;
-    linetext_length = 0;
-    flatten = false;
-    can_backtrack = false;
-    resume_at = 0;
-   }
 
 
-
-  end in
-  (module Config: Configurer )
-
-(* Demonstration of how effects could be used. *)
-(* But simpler primitives instead of effects are recommended *)
 let%expect_test "Insert one character"=
     let new_doc = make() in
     let pos = 1 in
@@ -112,22 +88,37 @@ let%expect_test "Merge two documents"=
 
   [%expect {| Text 2 |}]
 
-let%expect_test "Test console"=
-  let open Collaborative_editor__Consoletable.ConsoleTable in
-  let rows = [] in
-  let  rows = rows @ [{ row_data = "OpenAI";
-                        cell_data = String_data (Some "Navier Stokes")}] in
-  Printf.printf "%s\n" (render_table  rows  "centre");
+let%expect_test "concurrent insertion "=
+  let new_doc = make () in
+
+  let make_item agent seq content =
+    {
+      content;
+      id = { agent = Some agent; seq = Some seq };
+      origin_left = None;
+      origin_right = None;
+      deleted = false;
+    }
+  in
+
+  let item1 = make_item "Text0" 0 "A" in
+  let item2  = make_item "Text1" 0 "B" in
+
+  let doc1 = { new_doc with doc_content = [item1] } in
+  let result1 = merge doc1 item2   in
+
+  let doc2 = { new_doc with doc_content = [item2] } in
+  let result2 = merge doc2 item1   in
+
+  let contents items =
+        List.map items ~f:(fun item -> item.content)
+        |> String.concat ~sep:" "
+  in
+
+
+  Printf.printf " %s\n" (contents result1);
+  Printf.printf " %s\n" (contents result2);
   [%expect {|
-    Columns 2
-    Columns 2
-    Columns 2
-    Columns 2
-    Widths 2
-    Columns 2
-    Columns 2
-    Columns 2
-    Widths 2
-    ┌────────┬───────────────┐
-    │OpenAI Navier Stokes│
+    A B
+    A B
     |}]
